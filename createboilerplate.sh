@@ -1,6 +1,6 @@
-function flask_boilerplate() {
+flask_boilerplate() {
     secret_key=`openssl rand -base64 12`
-    
+
     cat > app.py <<EOF
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -71,6 +71,53 @@ EOF
 EOF
 }
 
+pyqt5_boilerplate() {
+    cat > pyqt5app.py <<EOF
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtCore import Qt
+
+class Window(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self._width = 500
+        self._height = 250
+        self._xPos = 700
+        self._yPos = 400
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(self._xPos, self._yPos, self._width, self._height)
+        self.setWindowTitle("My PyQt5 App")
+
+        self.vBox = QVBoxLayout()
+
+        self.title = QLabel()
+        self.title.setText("Welcome to your PyQt5 App!")
+        self.title.setAlignment(Qt.AlignCenter)
+        self.vBox.addWidget(self.title)
+
+        self.button = QPushButton()
+        self.button.setText("Click Me")
+        self.button.clicked.connect(self.buttonPressed)
+        self.vBox.addWidget(self.button)
+
+        self.centralWidget = QWidget(self)
+        self.centralWidget.setLayout(self.vBox)
+        self.setCentralWidget(self.centralWidget)
+
+        self.show()
+
+    def buttonPressed(self):
+        self.statusBar().showMessage("Button pressed!")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    myWin = Window()
+    sys.exit(app.exec_())
+EOF
+}
+
 APP=$1
 if [ -z $APP ]; then
     echo usage
@@ -79,5 +126,6 @@ APP=${APP,,}
 
 case "$APP" in
     flask)  flask_boilerplate;;
+    pyqt5)  pyqt5_boilerplate;;
     *)      echo usage;;
 esac
