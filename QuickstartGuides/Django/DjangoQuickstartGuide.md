@@ -197,7 +197,7 @@ def home(request):
 
 Now `localhost:8000` should display the data passed:
 
-![figure2_homepage_data](figure2_homepage_data.png)
+![figure2_homepage_data](figure2_homepage_data.PNG)
 
 ## Admin page
 
@@ -232,11 +232,11 @@ Superuser created successfully.
 
 Login to admin at `http://localhost:8000/admin/`:
 
-![figure3_admin_login](figure3_admin_login.png)
+![figure3_admin_login](figure3_admin_login.PNG)
 
 View and change user information:
 
-![figure4_adminpage](figure4_adminpage.png)
+![figure4_adminpage](figure4_adminpage.PNG)
 
 ## Database Management
 
