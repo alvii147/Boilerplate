@@ -298,5 +298,150 @@ user.posting_set.all()
 user.posting_set.create(title='Posting 3', content='Posting 3 content')
 ```
 
+## User Registration Page
 
+Django's built-in User Creation Form includes username and password. To add additional fields to the form, create `forms.py` in the `my_app` directory and create a registration form class that inherits from the User Creation Form class and add additional fields:
 
+```python
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+
+class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+```
+
+Create a new register view in `my_app/views.py`:
+
+```python
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import UserRegisterForm
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}!')
+            return redirect('my_app-home')
+    else:
+        form = UserRegisterForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'my_app/register.html', context)
+```
+
+Create `register.html` in `my_app/templates` to display the form:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Register</title>
+</head>
+<body>
+    <div>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Join Today</legend>
+                {{ form.as_p }}
+            </fieldset>
+            <div>
+                <button type="submit">Sign Up</button>
+            </div>
+        </form>
+        <div>
+            <small>Already Have An Account?<a href="#">Sign In</a></small>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+Finally, add a path to the register page to `my_app/urls.py`:
+
+```python
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.home, name = 'my_app-home'),
+    path('register/', views.register, name = 'my_app-register')
+]
+```
+
+Now, `localhost:8000/register/` should show the form:
+
+![Register Form](figure5_register_page.PNG)
+
+### Crispy Forms
+
+Crispy forms is useful for improving how forms look. Install Django Crispy Forms:
+
+```
+pip install django-crispy-forms
+```
+
+Add Crispy Forms to `INSTALLED_APPS` in `settings.py`:
+
+```python
+INSTALLED_APPS = [
+    'my_app.apps.MyAppConfig',
+    'crispy_forms',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+```
+
+Add `CRISPY_TEMPLATE_PACK` variable at the bottom of `settings.py` to verify bootstrap version:
+
+```python
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+```
+
+Update `register.html` to load Crispy Forms tags and use Crispy Forms to filter the forms:
+
+```html
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Register</title>
+</head>
+<body>
+    <div>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Join Today</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div>
+                <button type="submit">Sign Up</button>
+            </div>
+        </form>
+        <div>
+            <small>Already Have An Account?<a href="#">Sign In</a></small>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+Now, the register page should be formatted nice:
+
+![Crispy Forms](figure6_crispy_forms.PNG)

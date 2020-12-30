@@ -1,32 +1,55 @@
+# Flask
 flask_boilerplate() {
+    # Random string for secret key
     secret_key=`openssl rand -base64 12`
 
-    cat > app.py <<EOF
-from flask import Flask, render_template
+    # Import SQLAlchemy
+    IFS= read -r -d '' import_sqlalchemy <<EOS
 from flask_sqlalchemy import SQLAlchemy
+EOS
 
-app = Flask(__name__)
-app.secret_key = "$secret_key"
+    # SQLite3 database configurations
+    IFS= read -r -d '' db_config <<EOS
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+EOS
 
+    # User model for database
+    IFS= read -r -d '' user_model <<EOS
 class User(db.Model):
-    id = db.Column("id", db.Integer, primary_key = True)
+    id = db.Column("id", db.Integer, primary_key=True)
     name = db.Column(db.String(150))
 
     def __init__(self, name):
         self.name = name
+EOS
 
+    # Create database
+    IFS= read -r -d '' db_create_all <<EOS
+    db.create_all()
+EOS
+
+    if [ -z $SETUP_DATABASE ]; then
+        unset import_sqlalchemy db_config user_model db_create_all
+    fi
+
+    # Write to app.py
+    cat > app.py <<EOF
+from flask import Flask, render_template
+${import_sqlalchemy}
+app = Flask(__name__)
+app.secret_key = "${secret_key}"${db_config}
+${user_model}
 @app.route("/")
 def home():
     return render_template("home.html")
 
 if __name__ == "__main__":
-    db.create_all()
-    app.run()
+${db_create_all}    app.run(debug=True)
 EOF
 
+    # HTML templates
     mkdir -p templates
     cd templates
     cat > home.html <<EOF
@@ -45,6 +68,7 @@ EOF
 </html>
 EOF
 
+    # Style sheets
     cd ..
     mkdir -p static
     cd static
@@ -71,6 +95,7 @@ EOF
 EOF
 }
 
+# PyQt5
 pyqt5_boilerplate() {
     cat > pyqt5app.py <<EOF
 import sys
@@ -118,7 +143,14 @@ if __name__ == "__main__":
 EOF
 }
 
-APP=$1
+while getopts "d" flag; do
+    case "$flag" in
+        d) SETUP_DATABASE="TRUE";;
+        *) exit 1;;
+    esac
+done
+
+APP=${@:$OPTIND:1}
 if [ -z $APP ]; then
     echo usage
 fi

@@ -13,7 +13,7 @@ alias createboilerplate="/e/Programming/Boilerplate/./createboilerplate.sh"
 ## Flask
 
 ```
-createboilerplate flask
+createboilerplate [OPTIONS] flask
 ```
 
 This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS stylesheet, and an SQLite3 database.
@@ -30,6 +30,10 @@ python3 app.py
 
 Note: [Flask](https://pypi.org/project/Flask/) and [Flask-SQLAlchemy](https://pypi.org/project/Flask-SQLAlchemy/) must be installed.
 
+### Options
+```
+-d, setup database
+```
 ## PyQt5
 
 ```
