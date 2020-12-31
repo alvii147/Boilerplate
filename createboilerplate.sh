@@ -1,4 +1,140 @@
-# Django
+# ----------------------------------------------------------------------
+# Flask Boilerplate Script
+# ----------------------------------------------------------------------
+# Options:
+# -a = app name
+# -d, setup SQLite3 database
+# ----------------------------------------------------------------------
+# Requirements:
+# - Flask
+# - Flask SQLAlchemy
+# ----------------------------------------------------------------------
+
+flask_boilerplate() {
+    # Check for flask and flasksqlalchemy installation
+    flask_install=`$PYTHON_CMD -c "import flask" 2>&1`
+    flask_sqlalchemy_install=`$PYTHON_CMD -c "import flask_sqlalchemy" 2>&1`
+    if [ ! -z "$flask_install" ]; then
+        echo -e "\nWARNING: Flask is not installed"
+        echo -e "Please install Flask"
+        echo -e "Run \"pip install flask\""
+    fi
+    if [ ! -z "$flask_sqlalchemy_install" ]; then
+        echo -e "\nWARNING: Flask SQLAlchemy is not installed"
+        echo -e "Please install Flask SQLAlchemy"
+        echo -e "Run \"pip install flask-sqlalchemy\""
+    fi
+
+    # Random string for secret key
+    secret_key=`openssl rand -base64 12`
+
+    # Import SQLAlchemy
+    IFS= read -r -d '' import_sqlalchemy <<EOS
+from flask_sqlalchemy import SQLAlchemy
+EOS
+
+    # SQLite3 database configurations
+    IFS= read -r -d '' db_config <<EOS
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
+EOS
+
+    # User model for database
+    IFS= read -r -d '' user_model <<EOS
+class User(db.Model):
+    id = db.Column("id", db.Integer, primary_key=True)
+    name = db.Column(db.String(150))
+
+    def __init__(self, name):
+        self.name = name
+EOS
+
+    # Create database
+    IFS= read -r -d '' db_create_all <<EOS
+    db.create_all()
+EOS
+
+    if [ -z $SETUP_DATABASE ]; then
+        unset import_sqlalchemy db_config user_model db_create_all
+    fi
+
+    # Write to app.py
+    cat > $APP_NAME.py <<EOF
+from flask import Flask, render_template
+${import_sqlalchemy}
+app = Flask(__name__)
+app.secret_key = "${secret_key}"${db_config}
+${user_model}
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+if __name__ == "__main__":
+${db_create_all}    app.run(debug=True)
+EOF
+
+    # HTML templates
+    mkdir -p templates
+    cd templates
+    cat > home.html <<EOF
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel = "stylesheet" type = "text/css" href = "{{url_for('static', filename = 'styles.css')}}">
+        <title>My Flask App</title>
+    </head>
+    <body>
+        <div class="centerdiv">
+            <h1 class="centerh1">Welcome to your Flask app!</h1>
+            <img class="centerimg" src="https://flask.palletsprojects.com/en/1.1.x/_images/flask-logo.png" alt="Flask logo">
+        </div>
+    </body>
+</html>
+EOF
+
+    # Style sheets
+    cd ..
+    mkdir -p static
+    cd static
+    cat > styles.css <<EOF
+.centerdiv {
+  margin: auto;
+  width: 50%;
+  border: 3px solid black;
+  border-radius: 5px;
+  padding: 10px;
+}
+.centerh1 {
+  margin: auto;
+  width: 50%;
+  padding: 10px;
+  font-family: Georgia;
+}
+.centerimg {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+EOF
+}
+
+# ----------------------------------------------------------------------
+# Django Boilerplate Script
+# ----------------------------------------------------------------------
+# Options:
+# -p = project name
+# -a = app name
+# -t = time zone
+# ----------------------------------------------------------------------
+# Requirements:
+# - Django
+# - Django Crispy Forms
+# ----------------------------------------------------------------------
+
 django_boilerplate() {
     # Check for django and crispy forms installation
     FREEZE=`$PIP_CMD freeze`
@@ -284,108 +420,27 @@ EOF
     $PYTHON_CMD manage.py makemigrations > /dev/null
 }
 
-# Flask
-flask_boilerplate() {
-    # Random string for secret key
-    secret_key=`openssl rand -base64 12`
+# ----------------------------------------------------------------------
+# PyQt5 Boilerplate Script
+# ----------------------------------------------------------------------
+# Options:
+# -a = app name
+# ----------------------------------------------------------------------
+# Requirements:
+# - PyQt5
+# ----------------------------------------------------------------------
 
-    # Import SQLAlchemy
-    IFS= read -r -d '' import_sqlalchemy <<EOS
-from flask_sqlalchemy import SQLAlchemy
-EOS
-
-    # SQLite3 database configurations
-    IFS= read -r -d '' db_config <<EOS
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
-EOS
-
-    # User model for database
-    IFS= read -r -d '' user_model <<EOS
-class User(db.Model):
-    id = db.Column("id", db.Integer, primary_key=True)
-    name = db.Column(db.String(150))
-
-    def __init__(self, name):
-        self.name = name
-EOS
-
-    # Create database
-    IFS= read -r -d '' db_create_all <<EOS
-    db.create_all()
-EOS
-
-    if [ -z $SETUP_DATABASE ]; then
-        unset import_sqlalchemy db_config user_model db_create_all
+pyqt5_boilerplate() {
+    # Check for pyqt5 installation
+    pyqt5_install=`$PYTHON_CMD -c "import PyQt5" 2>&1`
+    if [ ! -z "$pyqt5_install" ]; then
+        echo -e "\nWARNING: PyQt5 is not installed"
+        echo -e "Please install PyQt5"
+        echo -e "Run \"pip install pyqt5\""
     fi
 
-    # Write to app.py
-    cat > app.py <<EOF
-from flask import Flask, render_template
-${import_sqlalchemy}
-app = Flask(__name__)
-app.secret_key = "${secret_key}"${db_config}
-${user_model}
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-if __name__ == "__main__":
-${db_create_all}    app.run(debug=True)
-EOF
-
-    # HTML templates
-    mkdir -p templates
-    cd templates
-    cat > home.html <<EOF
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel = "stylesheet" type = "text/css" href = "{{url_for('static', filename = 'styles.css')}}">
-        <title>My Flask App</title>
-    </head>
-    <body>
-        <div class="centerdiv">
-            <h1 class="centerh1">Welcome to your Flask app!</h1>
-            <img class="centerimg" src="https://flask.palletsprojects.com/en/1.1.x/_images/flask-logo.png" alt="Flask logo">
-        </div>
-    </body>
-</html>
-EOF
-
-    # Style sheets
-    cd ..
-    mkdir -p static
-    cd static
-    cat > styles.css <<EOF
-.centerdiv {
-  margin: auto;
-  width: 50%;
-  border: 3px solid black;
-  border-radius: 5px;
-  padding: 10px;
-}
-.centerh1 {
-  margin: auto;
-  width: 50%;
-  padding: 10px;
-  font-family: Georgia;
-}
-.centerimg {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
-}
-EOF
-}
-
-# PyQt5
-pyqt5_boilerplate() {
-    cat > pyqt5app.py <<EOF
+    # Write to main PyQt5 file
+    cat > $APP_NAME.py <<EOF
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt
@@ -431,31 +486,48 @@ if __name__ == "__main__":
 EOF
 }
 
+print_usage() {
+    echo -e "\nUsage: createboilerplate.sh [OPTIONS] <framework_name>"
+    echo -e "\nOptions:"
+    echo -e "\t-d, setup SQLite3 database (Flask only)"
+    echo -e "\t-p = project name (Django only)"
+    echo -e "\t-a = app name"
+    echo -e "\t-t = time zone (Django only)"
+    echo -e "\t-h, show help"
+    echo -e "\nSupported frameworks:"
+    echo -e "\t- Flask"
+    echo -e "\t- Django"
+    echo -e "\t- PyQt5"
+}
+
 PYTHON_CMD="python"
 PIP_CMD="pip"
 PROJ_NAME="myproject"
 APP_NAME="myapp"
 TIME_ZONE="EST"
 
-while getopts "dp:a:t:" flag; do
+while getopts "dhp:a:t:" flag; do
     case "$flag" in
-        d) SETUP_DATABASE="TRUE";;
-        p) PROJ_NAME=${OPTARG};;
-        a) APP_NAME=${OPTARG};;
-        t) TIME_ZONE=${OPTARG};;
-        *) exit 1;;
+        d)  SETUP_DATABASE="TRUE";;
+        h)  print_usage
+            exit 0;;
+        p)  PROJ_NAME=${OPTARG};;
+        a)  APP_NAME=${OPTARG};;
+        t)  TIME_ZONE=${OPTARG};;
+        *)  exit 128;;
     esac
 done
 
 APP=${@:$OPTIND:1}
 if [ -z $APP ]; then
-    echo usage
+    print_usage
+    exit 128
 fi
 APP=${APP,,}
 
 case "$APP" in
     flask)  flask_boilerplate;;
-    pyqt5)  pyqt5_boilerplate;;
     django) django_boilerplate;;
-    *)      echo usage;;
+    pyqt5)  pyqt5_boilerplate;;
+    *)      print_usage;;
 esac
