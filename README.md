@@ -16,7 +16,7 @@ alias createboilerplate="/e/Programming/Boilerplate/./createboilerplate.sh"
 createboilerplate [OPTIONS] flask
 ```
 
-This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS stylesheet, and an SQLite3 database.
+This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template and a CSS file.
 
 ![Flask App Tree Structure](img/flask_tree.PNG)
 
