@@ -161,15 +161,15 @@ django_boilerplate() {
     cd $PROJ_NAME
     $PYTHON_CMD manage.py startapp $APP_NAME
 
-    USERS_APP_NAME="users"
-    # Create users app
-    $PYTHON_CMD manage.py startapp $USERS_APP_NAME
+    ACCOUNTS_APP_NAME="accounts"
+    # Create accounts app
+    $PYTHON_CMD manage.py startapp $ACCOUNTS_APP_NAME
 
     # Get app class name
     APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${APP_NAME}/apps.py`
 
-    # Get users app class name
-    USERS_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${USERS_APP_NAME}/apps.py`
+    # Get accounts app class name
+    ACCOUNTS_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${ACCOUNTS_APP_NAME}/apps.py`
 
     # Add apps to INSTALLED_APPS
     MATCH_LINE=`grep -n INSTALLED_APPS ${PROJ_NAME}/settings.py | cut -f1 -d:`
@@ -177,7 +177,7 @@ django_boilerplate() {
     ex ${PROJ_NAME}/settings.py <<EOF
 $MATCH_LINE insert
     '${APP_NAME}.apps.${APP_CLASS_NAME}',
-    '${USERS_APP_NAME}.apps.${USERS_APP_CLASS_NAME}',
+    '${ACCOUNTS_APP_NAME}.apps.${ACCOUNTS_APP_CLASS_NAME}',
     'crispy_forms',
 .
 xit
@@ -188,6 +188,9 @@ EOF
 
     # Add crispy forms
     echo -e "\nCRISPY_TEMPLATE_PACK = 'bootstrap4'" >> ${PROJ_NAME}/settings.py
+
+    # Add login redirect url
+    echo -e "\nLOGIN_REDIRECT_URL = '${APP_NAME}-home'" >> ${PROJ_NAME}/settings.py
 
     # Configure project urls
     IMPORT_LINE=`grep -n -E "from\s+django\.urls\s+import" ${PROJ_NAME}/urls.py | tail -1 | cut -f1 -d:`
@@ -209,7 +212,7 @@ EOF
     ex ${PROJ_NAME}/urls.py <<EOF
 $MATCH_LINE insert
     path('', include('${APP_NAME}.urls')),
-    path('user/', include('${USERS_APP_NAME}.urls')),
+    path('${ACCOUNTS_APP_NAME}/', include('${ACCOUNTS_APP_NAME}.urls')),
 .
 xit
 EOF
@@ -224,13 +227,16 @@ urlpatterns = [
 ]
 EOF
 
-    # Configure users app url
-    cat <<EOF >> ${USERS_APP_NAME}/urls.py
+    # Configure accounts app url
+    cat <<EOF >> ${ACCOUNTS_APP_NAME}/urls.py
 from django.urls import path
-from . import views
+from django.contrib.auth import views as auth_views
+from . import views as accounts_views
 
 urlpatterns = [
-    path('register/', views.register, name = '${USERS_APP_NAME}-register'),
+    path('register/', accounts_views.register, name = '${ACCOUNTS_APP_NAME}-register'),
+    path('login/', auth_views.LoginView.as_view(template_name = '${ACCOUNTS_APP_NAME}/login.html'), name = '${ACCOUNTS_APP_NAME}-login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name = '${ACCOUNTS_APP_NAME}/logout.html'), name = '${ACCOUNTS_APP_NAME}-logout'),
 ]
 EOF
 
@@ -260,8 +266,13 @@ EOF
                             <a class="nav-item nav-link" href="/">Home</a>
                         </div>
                         <div class="navbar-nav">
-                            <a class="nav-item nav-link" href="#">Login</a>
-                            <a class="nav-item nav-link" href="user/register/">Register</a>
+                            {% if user.is_authenticated %}
+                                <a class="nav-item nav-link" href="#">Welcome, {{ user.first_name }}</a>
+                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-logout' %}">Logout</a>
+                            {% else %}
+                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-login' %}">Login</a>
+                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-register' %}">Register</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -310,11 +321,11 @@ ul {
 }
 
 .site-header .navbar-nav .nav-link {
-  color: rgb(153, 255, 187);
+  color: rgb(242, 242, 242);
 }
 
 .site-header .navbar-nav .nav-link:hover {
-  color: #ffffff;
+  color: rgb(255, 255, 255);
 }
 
 .site-header .navbar-nav .nav-link.active {
@@ -322,7 +333,7 @@ ul {
 }
 
 .content-section {
-  background: #ffffff;
+  background: rgb(255, 255, 255);
   padding: 10px 20px;
   border: 1px solid #dddddd;
   border-radius: 3px;
@@ -351,8 +362,8 @@ def home(request):
 EOF
 
     # Create register.html
-    mkdir -p ${USERS_APP_NAME}/templates/${USERS_APP_NAME}
-    cat > ${USERS_APP_NAME}/templates/${USERS_APP_NAME}/register.html <<EOF
+    mkdir -p ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}
+    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/register.html <<EOF
 {% extends "${APP_NAME}/base.html" %}
 {% load crispy_forms_tags %}
 {% block title %}
@@ -363,7 +374,7 @@ EOF
         <form method = "POST">
             {% csrf_token %}
             <fieldset class = "form-group">
-                <legend class = "border-bottom mb-4">Register</legend>
+                <legend class = "border-bottom mb-4">Register for an account</legend>
                 {{ form|crispy }}
             </fieldset>
             <div class = "form-group">
@@ -372,29 +383,78 @@ EOF
         </form>
         <div class = "border-top pt-3">
             <small class = "text-muted">
-                Already have an account? <a class = "ml-2" href = "#"> Sign In</a>
+                Already have an account? <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-login' %}">Login</a>
             </small>
         </div>
     </div>
 {% endblock %}
 EOF
 
+    # Create login.html
+    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/login.html <<EOF
+{% extends "${APP_NAME}/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}
+    Log In
+{% endblock %}
+{% block body %}
+    <div class = "content-section">
+        <form method = "POST">
+            {% csrf_token %}
+            <fieldset class = "form-group">
+                <legend class = "border-bottom mb-4">Log in to your account</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class = "form-group">
+                <button class = "btn btn-outline-info" type = "submit">Login</button>
+            </div>
+        </form>
+        <div class = "border-top pt-3">
+            <small class = "text-muted">
+                Don't have an account? <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-register' %}"> Sign Up</a>
+            </small>
+        </div>
+    </div>
+{% endblock %}
+EOF
+
+    # Create logout.html
+    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/logout.html <<EOF
+{% extends "${APP_NAME}/base.html" %}
+{% block title %}
+    Register Account
+{% endblock %}
+{% block body %}
+    <h1 class = "display-5">You have been logged out.</h1>
+    <div class = "border-top pt-3">
+        <small class = "text-muted">
+            <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-login' %}">Log In Again</a>
+        </small>
+    </div>
+{% endblock %}
+EOF
+
     # Create user registration form
-    cat > ${USERS_APP_NAME}/forms.py <<EOF
+    cat > ${ACCOUNTS_APP_NAME}/forms.py <<EOF
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
 class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField()
+    first_name = forms.CharField(label = 'First Name', required = True, help_text = 'Enter first name', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. Wade'}))
+    last_name = forms.CharField(label = 'Last Name', required = True, help_text = 'Enter last name', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. Wilson'}))
+    email = forms.EmailField(label = 'Email', required = True, help_text = 'Enter email address', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. wwilson@xforce.com'}))
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        widgets = {
+            'username' : forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. wwilson1991'}),
+        }
 EOF
 
-    # Add user views for app
-    cat > ${USERS_APP_NAME}/views.py <<EOF
+    # Add accounts views for app
+    cat > ${ACCOUNTS_APP_NAME}/views.py <<EOF
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import UserRegisterForm
@@ -405,14 +465,16 @@ def register(request):
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}!')
-            return redirect('${APP_NAME}-home')
+            messages.success(request, f'Account created! You may now log in.')
+            return redirect('${ACCOUNTS_APP_NAME}-login')
     else:
         form = UserRegisterForm()
+
     context = {
         'form' : form
     }
-    return render(request, '${USERS_APP_NAME}/register.html', context)
+
+    return render(request, '${ACCOUNTS_APP_NAME}/register.html', context)
 EOF
 
     # Apply migrations

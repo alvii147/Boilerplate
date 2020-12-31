@@ -106,6 +106,10 @@ python manage.py runserver
 
 ![Django Homepage](img/django_homepage_screenshot.PNG)
 
+#### Login Page
+
+![Django Login Page](img/django_loginpage_screenshot.PNG)
+
 #### Register Page
 
 ![Django Register Page](img/django_registerpage_screenshot.PNG)
