@@ -92,7 +92,7 @@ pip install django-crispy-forms
 createboilerplate -p django_proj -a django_app -t EST django
 ```
 
-This creates a **Django** project, sets up a Django application, user registration, user login, and bootstrap HTML templates.
+This creates a **Django** project, sets up a general application and an accounts application. The accounts application includes user registration and login pages, rendered with Bootstrap 4 HTML templates.
 
 ![Django Tree Structure](img/django_tree.PNG)
 
