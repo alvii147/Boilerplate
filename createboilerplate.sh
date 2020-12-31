@@ -209,7 +209,7 @@ EOF
     ex ${PROJ_NAME}/urls.py <<EOF
 $MATCH_LINE insert
     path('', include('${APP_NAME}.urls')),
-    path('register/', include('${USERS_APP_NAME}.urls')),
+    path('user/', include('${USERS_APP_NAME}.urls')),
 .
 xit
 EOF
@@ -230,7 +230,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.register, name = '${USERS_APP_NAME}-register'),
+    path('register/', views.register, name = '${USERS_APP_NAME}-register'),
 ]
 EOF
 
@@ -261,7 +261,7 @@ EOF
                         </div>
                         <div class="navbar-nav">
                             <a class="nav-item nav-link" href="#">Login</a>
-                            <a class="nav-item nav-link" href="register/">Register</a>
+                            <a class="nav-item nav-link" href="user/register/">Register</a>
                         </div>
                     </div>
                 </div>
