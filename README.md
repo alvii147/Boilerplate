@@ -22,7 +22,7 @@ createboilerplate [OPTIONS] flask
 
 **-a** = app name
 
-**-d,** setup SQLite3 database
+**-d,**   setup SQLite3 database
 
 ### Requirements
 
@@ -70,6 +70,8 @@ createboilerplate [OPTIONS] django
 
 **-a** = app name
 
+**-R,**   setup Django REST framework
+
 **-t** = time zone
 
 ### Dependencies
@@ -89,10 +91,10 @@ pip install django-crispy-forms
 ### Example Use
 
 ```
-createboilerplate -p django_proj -a django_app -t EST django
+createboilerplate -p django_proj -a django_app -R -t EST django
 ```
 
-This creates a **Django** project, sets up a general application and an accounts application. The accounts application includes user registration and login pages, rendered with Bootstrap 4 HTML templates.
+This creates a **Django** project, sets up a general application and an accounts application. The accounts application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The REST framework option also sets up an application for the REST API.
 
 ![Django Tree Structure](img/django_tree.PNG)
 
@@ -102,17 +104,21 @@ The Django server can then be run on `localhost:8000`.
 python manage.py runserver
 ```
 
-#### Homepage
+Home page at `localhost:8000/`:
 
 ![Django Homepage](img/django_homepage_screenshot.PNG)
 
-#### Login Page
+Login page at `localhost:8000/accounts/login/`:
 
 ![Django Login Page](img/django_loginpage_screenshot.PNG)
 
-#### Register Page
+Register page at `localhost:8000/accounts/register/`:
 
 ![Django Register Page](img/django_registerpage_screenshot.PNG)
+
+Browsable REST API at `localhost:8000/api/users/`:
+
+![Django Rest Framwork Page](img/django_restframework_screenshot.PNG)
 
 ## PyQt5
 

@@ -149,9 +149,19 @@ django_boilerplate() {
     crispy_forms_install=`echo "$FREEZE" | grep -E "django-crispy-forms==[\d.]*"`
     if [ -z "$crispy_forms_install" ]; then
         echo -e "\nERROR: Django Crispy Forms is not installed"
-        echo -e "Please install Crispy Forms"
+        echo -e "Please install Django Crispy Forms"
         echo -e "Run \"pip install django-crispy-forms\""
         exit 127
+    fi
+
+    rest_framework_install=`echo "$FREEZE" | grep -E "djangorestframework==[\d.]*"`
+    if [ ! -z $SETUP_REST_API ]; then
+        if [ -z "$rest_framework_install" ]; then
+            echo -e "\nERROR: Django REST framework is not installed"
+            echo -e "Please install Django REST framework"
+            echo -e "Run \"pip install djangorestframework\""
+            exit 127
+        fi
     fi
 
     # Create project
@@ -165,11 +175,31 @@ django_boilerplate() {
     # Create accounts app
     $PYTHON_CMD manage.py startapp $ACCOUNTS_APP_NAME
 
+    # Create rest api app
+    if [ ! -z $SETUP_REST_API ]; then
+        REST_API_APP_NAME="api"
+        $PYTHON_CMD manage.py startapp $REST_API_APP_NAME
+    fi
+
     # Get app class name
     APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${APP_NAME}/apps.py`
 
     # Get accounts app class name
     ACCOUNTS_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${ACCOUNTS_APP_NAME}/apps.py`
+
+    # Get rest api app class name
+    if [ ! -z $SETUP_REST_API ]; then
+        REST_API_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${REST_API_APP_NAME}/apps.py`
+    fi
+
+    IFS= read -r -d '' rest_api_apps <<EOS
+    '${REST_API_APP_NAME}.apps.${REST_API_APP_CLASS_NAME}',
+    'rest_framework',
+EOS
+
+    if [ -z $SETUP_REST_API ]; then
+        unset rest_api_apps
+    fi
 
     # Add apps to INSTALLED_APPS
     MATCH_LINE=`grep -n INSTALLED_APPS ${PROJ_NAME}/settings.py | cut -f1 -d:`
@@ -178,7 +208,7 @@ django_boilerplate() {
 $MATCH_LINE insert
     '${APP_NAME}.apps.${APP_CLASS_NAME}',
     '${ACCOUNTS_APP_NAME}.apps.${ACCOUNTS_APP_CLASS_NAME}',
-    'crispy_forms',
+${rest_api_apps}    'crispy_forms',
 .
 xit
 EOF
@@ -207,12 +237,17 @@ EOF
         sed -i "s/${LINE_CONTENT}/${LINE_CONTENT}, include/g" ${PROJ_NAME}/urls.py
     fi
 
+    if [ ! -z $SETUP_REST_API ]; then
+        rest_api_url="path('${REST_API_APP_NAME}/', include('${REST_API_APP_NAME}.urls')),"
+    fi
+
     MATCH_LINE=`grep -n -E "urlpatterns" ${PROJ_NAME}/urls.py | tail -1 | cut -f1 -d:`
     ((MATCH_LINE++))
     ex ${PROJ_NAME}/urls.py <<EOF
 $MATCH_LINE insert
     path('', include('${APP_NAME}.urls')),
     path('${ACCOUNTS_APP_NAME}/', include('${ACCOUNTS_APP_NAME}.urls')),
+    $rest_api_url
 .
 xit
 EOF
@@ -239,6 +274,18 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name = '${ACCOUNTS_APP_NAME}/logout.html'), name = '${ACCOUNTS_APP_NAME}-logout'),
 ]
 EOF
+
+    # Configure rest api urls
+    if [ ! -z $SETUP_REST_API ]; then
+        cat <<EOF >> ${REST_API_APP_NAME}/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('users/', views.UserListCreate.as_view()),
+]
+EOF
+    fi
 
     # Create base.html
     mkdir -p ${APP_NAME}/templates/${APP_NAME}
@@ -353,14 +400,6 @@ EOF
 {% endblock %}
 EOF
 
-    # Add views for app
-    cat > ${APP_NAME}/views.py <<EOF
-from django.shortcuts import render
-
-def home(request):
-    return render(request, '${APP_NAME}/home.html')
-EOF
-
     # Create register.html
     mkdir -p ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}
     cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/register.html <<EOF
@@ -453,7 +492,15 @@ class UserRegisterForm(UserCreationForm):
         }
 EOF
 
-    # Add accounts views for app
+    # Add views for app
+    cat > ${APP_NAME}/views.py <<EOF
+from django.shortcuts import render
+
+def home(request):
+    return render(request, '${APP_NAME}/home.html')
+EOF
+
+    # Add views for accounts
     cat > ${ACCOUNTS_APP_NAME}/views.py <<EOF
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -476,6 +523,32 @@ def register(request):
 
     return render(request, '${ACCOUNTS_APP_NAME}/register.html', context)
 EOF
+
+    # Add views for rest api
+    if [ ! -z $SETUP_REST_API ]; then
+        cat > ${REST_API_APP_NAME}/views.py <<EOF
+from django.contrib.auth.models import User
+from .serializers import UserSerializer
+from rest_framework import generics
+
+class UserListCreate(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+EOF
+    fi
+
+    # Create serializers
+    if [ ! -z $SETUP_REST_API ]; then
+        cat > ${REST_API_APP_NAME}/serializers.py <<EOF
+from rest_framework import serializers
+from django.contrib.auth.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+EOF
+    fi
 
     # Apply migrations
     $PYTHON_CMD manage.py migrate > /dev/null
@@ -551,9 +624,10 @@ EOF
 print_usage() {
     echo -e "\nUsage: createboilerplate.sh [OPTIONS] <framework_name>"
     echo -e "\nOptions:"
-    echo -e "\t-d, setup SQLite3 database (Flask only)"
     echo -e "\t-p = project name (Django only)"
     echo -e "\t-a = app name"
+    echo -e "\t-d, setup SQLite3 database (Flask only)"
+    echo -e "\t-R, setup Django REST Framework (Django only)"
     echo -e "\t-t = time zone (Django only)"
     echo -e "\t-h, show help"
     echo -e "\nSupported frameworks:"
@@ -568,14 +642,15 @@ PROJ_NAME="myproject"
 APP_NAME="myapp"
 TIME_ZONE="EST"
 
-while getopts "dhp:a:t:" flag; do
+while getopts "p:a:dRt:h" flag; do
     case "$flag" in
-        d)  SETUP_DATABASE="TRUE";;
-        h)  print_usage
-            exit 0;;
         p)  PROJ_NAME=${OPTARG};;
         a)  APP_NAME=${OPTARG};;
+        d)  SETUP_DATABASE="TRUE";;
+        R)  SETUP_REST_API="TRUE";;
         t)  TIME_ZONE=${OPTARG};;
+        h)  print_usage
+            exit 0;;
         *)  exit 128;;
     esac
 done
