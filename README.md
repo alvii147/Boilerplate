@@ -10,6 +10,12 @@ It's convenient to set up an alias for the path to this script so it can be call
 alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 ```
 
+## Supported Libraries & Frameworks
+
+- [Flask](#flask)
+- [Django](#django)
+- [PyQt5](#pyqt5)
+
 ## Flask
 
 <img src="img/flask_logo.PNG" alt="Flask logo" width="300"/>
@@ -35,7 +41,7 @@ Install Flask
 pip install flask
 ```
 
-Install Flask SQLAlchemy (Only required for setup database option)
+Install Flask SQLAlchemy (optional, required for setup database option)
 
 ```
 pip install flask-sqlalchemy
@@ -47,7 +53,7 @@ pip install flask-sqlalchemy
 createboilerplate -d -a flaskapp flask
 ```
 
-This creates a boilerplate Python **Flask** application, with an HTML template, a CSS file and a SQLite3 database.
+This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS file and a SQLite3 database.
 
 ![Flask App Tree Structure](img/flask_tree.PNG)
 
@@ -107,7 +113,7 @@ pip install djangorestframework
 createboilerplate -p django_proj -a django_app -R -t EST django
 ```
 
-This creates a **Django** project and application. The application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The REST framework option also sets up a REST API that allows CRUD operations.
+This creates a [Django](https://www.djangoproject.com/) project and application. The application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The [Django REST framework](https://www.django-rest-framework.org/) option also sets up a REST API that allows CRUD operations.
 
 ![Django Tree Structure](img/django_tree.PNG)
 
@@ -137,11 +143,13 @@ Browsable REST API at `https://localhost:8000/api/users/`:
 
 <img src="img/reactjs_logo.PNG" alt="ReactJS logo" width="300"/>
 
-`createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using webpack, babel and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
+`createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using [webpack](https://webpack.js.org/), [babel](https://babeljs.io/) and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
 
 Running the React.JS option creates a `frontend` Django application which includes all React components and dependencies:
 
 ![Django-React frontend app tree](img/djangoreact_tree.PNG)
+
+The main component, `App.js`, includes functions written with [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) for executing create, read, update and delete operations through the Django REST framework.
 
 This also creates a `launch.sh`, intended to be used as a shortcut to run both the Django application and the webpack dev server. Executing `launch.sh` should run the server with the same application as the one without the React.JS option at `https://localhost:8000`.
 
@@ -175,7 +183,7 @@ pip install pyqt5
 createboilerplate -a pyqt5app pyqt5
 ```
 
-This creates a boilerplate **PyQt5** script, `pyqt5app.py`. Running it starts a basic PyQt5 desktop application.
+This creates a boilerplate [PyQt5](https://riverbankcomputing.com/software/pyqt/intro) script, `pyqt5app.py`. Running it starts a basic PyQt5 desktop application.
 
 ```
 python3 pyqt5app.py
