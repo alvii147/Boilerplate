@@ -3,11 +3,11 @@
 # ----------------------------------------------------------------------
 # Options:
 # -a = app name
-# -d, setup SQLite3 database
+# -d,  setup SQLite3 database
 # ----------------------------------------------------------------------
 # Requirements:
 # - Flask
-# - Flask SQLAlchemy
+# - Flask SQLAlchemy (if database option included)
 # ----------------------------------------------------------------------
 
 flask_boilerplate() {
@@ -128,22 +128,30 @@ EOF
 # Options:
 # -p = project name
 # -a = app name
+# -R,  setup Django REST framework
+# -r,  setup ReactJS frontend
 # -t = time zone
 # ----------------------------------------------------------------------
 # Requirements:
 # - Django
 # - Django Crispy Forms
+# - Django REST framework (if REST API or ReactJS option included)
 # ----------------------------------------------------------------------
 
 django_boilerplate() {
     # Check for django and crispy forms installation
-    FREEZE=`$PIP_CMD freeze`
+    echo -e "Verifying requirements..."
+    FREEZE=`$PIP_CMD freeze 2>&1`
     django_install=`echo "$FREEZE" | grep -E "Django==[\d.]*"`
     if [ -z "$django_install" ]; then
         echo -e "\nERROR: Django is not installed"
         echo -e "Please install Django"
         echo -e "Run \"pip install django\""
-        exit 127
+        requirements_err=1
+    else
+        if [[ ! "$requirements_err" -eq 1 ]]; then
+            echo -e "Found Django installation"
+        fi
     fi
 
     crispy_forms_install=`echo "$FREEZE" | grep -E "django-crispy-forms==[\d.]*"`
@@ -151,145 +159,184 @@ django_boilerplate() {
         echo -e "\nERROR: Django Crispy Forms is not installed"
         echo -e "Please install Django Crispy Forms"
         echo -e "Run \"pip install django-crispy-forms\""
-        exit 127
+        requirements_err=1
+    else
+        if [[ ! "$requirements_err" -eq 1 ]]; then
+            echo -e "Found Django Crispy Forms installation"
+        fi
     fi
 
-    rest_framework_install=`echo "$FREEZE" | grep -E "djangorestframework==[\d.]*"`
     if [ ! -z $SETUP_REST_API ]; then
+        rest_framework_install=`echo "$FREEZE" | grep -E "djangorestframework==[\d.]*"`
         if [ -z "$rest_framework_install" ]; then
             echo -e "\nERROR: Django REST framework is not installed"
             echo -e "Please install Django REST framework"
             echo -e "Run \"pip install djangorestframework\""
-            exit 127
+            requirements_err=1
+        else
+            if [[ ! "$requirements_err" -eq 1 ]]; then
+                echo -e "Found Django REST framework installation"
+            fi
         fi
     fi
 
+    if [ ! -z $SETUP_REACT ]; then
+        which npm >/dev/null 2>&1
+        if [[ "$?" -ne 0 ]]; then
+            echo -e "\nERROR: npm is not installed"
+            echo -e "Please install npm"
+            echo -e "https://nodejs.org/en/download/"
+            requirements_err=1
+        else
+            if [[ ! "$requirements_err" -eq 1 ]]; then
+                echo -e "Found npm installation"
+            fi
+        fi
+    fi
+
+    if [[ "$requirements_err" -eq 1 ]]; then
+        exit 127
+    fi
+
     # Create project
+    echo -e "Creating Django project $PROJ_NAME..."
     django-admin startproject $PROJ_NAME
 
     # Create app
+    echo -e "Creating Django app $APP_NAME..."
     cd $PROJ_NAME
     $PYTHON_CMD manage.py startapp $APP_NAME
-
-    ACCOUNTS_APP_NAME="accounts"
-    # Create accounts app
-    $PYTHON_CMD manage.py startapp $ACCOUNTS_APP_NAME
-
-    # Create rest api app
-    if [ ! -z $SETUP_REST_API ]; then
-        REST_API_APP_NAME="api"
-        $PYTHON_CMD manage.py startapp $REST_API_APP_NAME
-    fi
 
     # Get app class name
     APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${APP_NAME}/apps.py`
 
-    # Get accounts app class name
-    ACCOUNTS_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${ACCOUNTS_APP_NAME}/apps.py`
-
-    # Get rest api app class name
-    if [ ! -z $SETUP_REST_API ]; then
-        REST_API_APP_CLASS_NAME=`grep -oP "class\s+\K\S+(?=\s*\(\s*\S+\s*\)\s*:)" ${REST_API_APP_NAME}/apps.py`
+    # Creating frontend ReactJS app
+    FRONTEND_APP_NAME="frontend"
+    if [ ! -z $SETUP_REACT ]; then
+        echo -e "Creating frontend ReactJS app $FRONTEND_APP_NAME..."
+        $PYTHON_CMD manage.py startapp $FRONTEND_APP_NAME
     fi
 
-    IFS= read -r -d '' rest_api_apps <<EOS
-    '${REST_API_APP_NAME}.apps.${REST_API_APP_CLASS_NAME}',
+    IFS= read -r -d '' rest_framework_app <<EOS
     'rest_framework',
 EOS
-
     if [ -z $SETUP_REST_API ]; then
-        unset rest_api_apps
+        unset rest_framework_app
+    fi
+
+    IFS= read -r -d '' frontend_app <<EOS
+    '${FRONTEND_APP_NAME}',
+EOS
+
+    if [ -z $SETUP_REACT ]; then
+        unset frontend_app
     fi
 
     # Add apps to INSTALLED_APPS
+    echo -e "Adding apps to INSTALLED_APPS in settings.py..."
     MATCH_LINE=`grep -n INSTALLED_APPS ${PROJ_NAME}/settings.py | cut -f1 -d:`
     ((MATCH_LINE++))
     ex ${PROJ_NAME}/settings.py <<EOF
 $MATCH_LINE insert
     '${APP_NAME}.apps.${APP_CLASS_NAME}',
-    '${ACCOUNTS_APP_NAME}.apps.${ACCOUNTS_APP_CLASS_NAME}',
-${rest_api_apps}    'crispy_forms',
+${rest_framework_app}${frontend_app}    'crispy_forms',
 .
 xit
 EOF
 
     # Change time zone
+    echo -e "Setting time zone..."
     sed -i -E "s/TIME_ZONE\s*=\s*\S+/TIME_ZONE = '${TIME_ZONE}'/g" ${PROJ_NAME}/settings.py
 
     # Add crispy forms
+    echo -e "Setting crispy forms bootstrap version..."
     echo -e "\nCRISPY_TEMPLATE_PACK = 'bootstrap4'" >> ${PROJ_NAME}/settings.py
 
     # Add login redirect url
-    echo -e "\nLOGIN_REDIRECT_URL = '${APP_NAME}-home'" >> ${PROJ_NAME}/settings.py
+    echo -e "Setting login redirect URL..."
+    echo -e "\nLOGIN_REDIRECT_URL = 'home'" >> ${PROJ_NAME}/settings.py
 
     # Configure project urls
-    IMPORT_LINE=`grep -n -E "from\s+django\.urls\s+import" ${PROJ_NAME}/urls.py | tail -1 | cut -f1 -d:`
-    LINE_CONTENT=`grep -E "from\s+django\.urls\s+import" ${PROJ_NAME}/urls.py | tail -1`
-    if [ -z "$LINE_CONTENT" ]; then
-        ((IMPORT_LINE++))
-        ex ${PROJ_NAME}/urls.py <<EOF
-$IMPORT_LINE insert
-from django.urls import include
-.
-xit
-EOF
-    else
-        sed -i "s/${LINE_CONTENT}/${LINE_CONTENT}, include/g" ${PROJ_NAME}/urls.py
-    fi
-
+    echo -e "Setting up project URLs..."
     if [ ! -z $SETUP_REST_API ]; then
-        rest_api_url="path('${REST_API_APP_NAME}/', include('${REST_API_APP_NAME}.urls')),"
+        IFS= read -r -d '' rest_api_url <<EOS
+    path('api/', include('${APP_NAME}.api_urls')),
+EOS
     fi
 
-    MATCH_LINE=`grep -n -E "urlpatterns" ${PROJ_NAME}/urls.py | tail -1 | cut -f1 -d:`
-    ((MATCH_LINE++))
-    ex ${PROJ_NAME}/urls.py <<EOF
-$MATCH_LINE insert
-    path('', include('${APP_NAME}.urls')),
-    path('${ACCOUNTS_APP_NAME}/', include('${ACCOUNTS_APP_NAME}.urls')),
-    $rest_api_url
-.
-xit
+    if [ -z $SETUP_REACT ]; then
+        main_url_path="${APP_NAME}.app_urls"
+    else
+        main_url_path="${FRONTEND_APP_NAME}.urls"
+    fi
+
+    cat <<EOF > ${PROJ_NAME}/urls.py
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('', include('${main_url_path}')),
+    path('accounts/', include('${APP_NAME}.accounts_urls')),
+${rest_api_url}    path('admin/', admin.site.urls),
+]
 EOF
 
     # Configure app urls
-    cat <<EOF >> ${APP_NAME}/urls.py
+    echo -e "Setting up app URLs..."
+    cat <<EOF > ${APP_NAME}/app_urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name = '${APP_NAME}-home'),
+    path('', views.home, name = 'home'),
 ]
 EOF
 
     # Configure accounts app url
-    cat <<EOF >> ${ACCOUNTS_APP_NAME}/urls.py
+    echo -e "Setting up accounts URLs..."
+    cat <<EOF > ${APP_NAME}/accounts_urls.py
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views as accounts_views
+from . import views
 
 urlpatterns = [
-    path('register/', accounts_views.register, name = '${ACCOUNTS_APP_NAME}-register'),
-    path('login/', auth_views.LoginView.as_view(template_name = '${ACCOUNTS_APP_NAME}/login.html'), name = '${ACCOUNTS_APP_NAME}-login'),
-    path('logout/', auth_views.LogoutView.as_view(template_name = '${ACCOUNTS_APP_NAME}/logout.html'), name = '${ACCOUNTS_APP_NAME}-logout'),
+    path('register/', views.register, name = 'accounts-register'),
+    path('login/', auth_views.LoginView.as_view(template_name = '${APP_NAME}/login.html'), name = 'accounts-login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name = '${APP_NAME}/logout.html'), name = 'accounts-logout'),
 ]
 EOF
 
     # Configure rest api urls
     if [ ! -z $SETUP_REST_API ]; then
-        cat <<EOF >> ${REST_API_APP_NAME}/urls.py
+        echo -e "Setting up REST API URLs..."
+        cat <<EOF > ${APP_NAME}/api_urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('users/', views.UserListCreate.as_view()),
+    path('users/', views.UserListCreate.as_view(), name = "api-users-list-create"),
+    path('users/<int:pk>/', views.UserGetUpdateDelete.as_view(), name = "api-users-get-update-delete"),
+]
+EOF
+    fi
+
+    # Configure frontend urls
+    if [ ! -z $SETUP_REACT ]; then
+        echo -e "Setting up frontend URLs"
+        cat <<EOF > ${FRONTEND_APP_NAME}/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.index ),
 ]
 EOF
     fi
 
     # Create base.html
+    echo -e "Creating base.html..."
     mkdir -p ${APP_NAME}/templates/${APP_NAME}
-    cat > ${APP_NAME}/templates/${APP_NAME}/base.html <<EOF
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/base.html
 {% load static %}
 <!DOCTYPE html>
 <html>
@@ -304,7 +351,7 @@ EOF
         <header class="site-header">
             <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
                 <div class="container">
-                    <a class="navbar-brand mr-4" href="/">${PROJ_NAME}</a>
+                    <a class="navbar-brand mr-4" href="/">django_proj</a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
@@ -315,10 +362,10 @@ EOF
                         <div class="navbar-nav">
                             {% if user.is_authenticated %}
                                 <a class="nav-item nav-link" href="#">Welcome, {{ user.first_name }}</a>
-                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-logout' %}">Logout</a>
+                                <a class="nav-item nav-link" href="{% url 'accounts-logout' %}">Logout</a>
                             {% else %}
-                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-login' %}">Login</a>
-                                <a class="nav-item nav-link" href="{% url '${ACCOUNTS_APP_NAME}-register' %}">Register</a>
+                                <a class="nav-item nav-link" href="{% url 'accounts-login' %}">Login</a>
+                                <a class="nav-item nav-link" href="{% url 'accounts-register' %}">Register</a>
                             {% endif %}
                         </div>
                     </div>
@@ -342,13 +389,15 @@ EOF
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        {% block src %}{% endblock %}
     </body>
 </html>
 EOF
 
     # Create styles_base.css
+    echo -e "Creating styles_base.css..."
     mkdir -p ${APP_NAME}/static/${APP_NAME}
-    cat > ${APP_NAME}/static/${APP_NAME}/styles_base.css <<EOF
+    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/styles_base.css
 body {
   background: #fafafa;
   color: #333333;
@@ -389,7 +438,8 @@ ul {
 EOF
 
     # Create home.html
-    cat > ${APP_NAME}/templates/${APP_NAME}/home.html <<EOF
+    echo -e "Creating home.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/home.html
 {% extends "${APP_NAME}/base.html" %}
 {% block title %}
     Home Page
@@ -398,11 +448,13 @@ EOF
     <h1 class="display-1">Django application</h1>
     <h1 class="display-4">Welcome to the home page!</h1>
 {% endblock %}
+{% block src %}
+{% endblock %}
 EOF
 
     # Create register.html
-    mkdir -p ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}
-    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/register.html <<EOF
+    echo -e "Creating register.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/register.html
 {% extends "${APP_NAME}/base.html" %}
 {% load crispy_forms_tags %}
 {% block title %}
@@ -422,15 +474,18 @@ EOF
         </form>
         <div class = "border-top pt-3">
             <small class = "text-muted">
-                Already have an account? <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-login' %}">Login</a>
+                Already have an account? <a class = "ml-2" href = "{% url 'accounts-login' %}">Login</a>
             </small>
         </div>
     </div>
 {% endblock %}
+{% block src %}
+{% endblock %}
 EOF
 
     # Create login.html
-    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/login.html <<EOF
+    echo -e "Creating login.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/login.html
 {% extends "${APP_NAME}/base.html" %}
 {% load crispy_forms_tags %}
 {% block title %}
@@ -450,15 +505,18 @@ EOF
         </form>
         <div class = "border-top pt-3">
             <small class = "text-muted">
-                Don't have an account? <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-register' %}"> Sign Up</a>
+                Don't have an account? <a class = "ml-2" href = "{% url 'accounts-register' %}"> Sign Up</a>
             </small>
         </div>
     </div>
 {% endblock %}
+{% block src %}
+{% endblock %}
 EOF
 
     # Create logout.html
-    cat > ${ACCOUNTS_APP_NAME}/templates/${ACCOUNTS_APP_NAME}/logout.html <<EOF
+    echo -e "Creating logout.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/logout.html
 {% extends "${APP_NAME}/base.html" %}
 {% block title %}
     Register Account
@@ -467,14 +525,37 @@ EOF
     <h1 class = "display-5">You have been logged out.</h1>
     <div class = "border-top pt-3">
         <small class = "text-muted">
-            <a class = "ml-2" href = "{% url '${ACCOUNTS_APP_NAME}-login' %}">Log In Again</a>
+            <a class = "ml-2" href = "{% url 'accounts-login' %}">Log In Again</a>
         </small>
     </div>
 {% endblock %}
+{% block src %}
+{% endblock %}
 EOF
 
+    # Create frontend index.html
+    if [ ! -z $SETUP_REACT ]; then
+        echo -e "Creating index.html..."
+        mkdir -p ${FRONTEND_APP_NAME}/{static,templates}/${FRONTEND_APP_NAME}
+        cat <<EOF > ${FRONTEND_APP_NAME}/templates/${FRONTEND_APP_NAME}/index.html
+{% extends "${APP_NAME}/base.html" %}
+{% block title %}
+    Home Page
+{% endblock %}
+{% block body %}
+    <div id="app">
+    </div>
+{% endblock %}
+{% block src %}
+    {% load static %}
+    <script src="{% static '${FRONTEND_APP_NAME}/main.js' %}"></script>
+{% endblock %}
+EOF
+    fi
+
     # Create user registration form
-    cat > ${ACCOUNTS_APP_NAME}/forms.py <<EOF
+    echo -e "Creating user registrations form..."
+    cat <<EOF > ${APP_NAME}/forms.py
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -493,18 +574,25 @@ class UserRegisterForm(UserCreationForm):
 EOF
 
     # Add views for app
-    cat > ${APP_NAME}/views.py <<EOF
-from django.shortcuts import render
-
-def home(request):
-    return render(request, '${APP_NAME}/home.html')
-EOF
-
-    # Add views for accounts
-    cat > ${ACCOUNTS_APP_NAME}/views.py <<EOF
+    echo -e "Writing app views..."
+    cat <<EOF > ${APP_NAME}/views.py
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import UserRegisterForm
+EOF
+
+    if [ ! -z $SETUP_REST_API ]; then
+        cat <<EOF >> ${APP_NAME}/views.py
+from django.contrib.auth.models import User
+from .serializers import UserSerializer
+from rest_framework import generics
+EOF
+    fi
+
+    cat <<EOF >> ${APP_NAME}/views.py
+
+def home(request):
+    return render(request, '${APP_NAME}/home.html')
 
 def register(request):
     if request.method == 'POST':
@@ -513,7 +601,7 @@ def register(request):
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f'Account created! You may now log in.')
-            return redirect('${ACCOUNTS_APP_NAME}-login')
+            return redirect('accounts-login')
     else:
         form = UserRegisterForm()
 
@@ -521,25 +609,35 @@ def register(request):
         'form' : form
     }
 
-    return render(request, '${ACCOUNTS_APP_NAME}/register.html', context)
+    return render(request, '${APP_NAME}/register.html', context)
 EOF
 
-    # Add views for rest api
     if [ ! -z $SETUP_REST_API ]; then
-        cat > ${REST_API_APP_NAME}/views.py <<EOF
-from django.contrib.auth.models import User
-from .serializers import UserSerializer
-from rest_framework import generics
+        cat <<EOF >> ${APP_NAME}/views.py
 
 class UserListCreate(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class UserGetUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 EOF
     fi
 
+    if [ ! -z $SETUP_REACT ]; then
+        cat <<EOF > ${FRONTEND_APP_NAME}/views.py
+from django.shortcuts import render
+
+def index(request):
+    return render(request, '${FRONTEND_APP_NAME}/index.html')
+EOF
+    fi
+
     # Create serializers
     if [ ! -z $SETUP_REST_API ]; then
-        cat > ${REST_API_APP_NAME}/serializers.py <<EOF
+        echo -e "Creating serializers..."
+        cat <<EOF > ${APP_NAME}/serializers.py
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
@@ -551,8 +649,306 @@ EOF
     fi
 
     # Apply migrations
-    $PYTHON_CMD manage.py migrate > /dev/null
-    $PYTHON_CMD manage.py makemigrations > /dev/null
+    echo -e "Creating migrations..."
+    $PYTHON_CMD manage.py makemigrations
+    echo -e "Migrating..."
+    $PYTHON_CMD manage.py migrate
+
+    # Integrate react using webpack and babel
+    if [ ! -z $SETUP_REACT ]; then
+        cd ${FRONTEND_APP_NAME}
+        mkdir -p src/components
+
+        npm init -y
+        # Install webpack and webpack cli
+        echo -e "Installing webpack and webpack cli..."
+        npm i webpack webpack-cli --save-dev
+
+        # Configure dev and production webpack scripts
+        echo -e "Configuring dev and production webpack scripts..."
+        MATCH_LINE=`grep -En "\"scripts\"\s*:\s*{" package.json | cut -f1 -d:`
+        ((MATCH_LINE++))
+        ex package.json <<EOF
+$MATCH_LINE insert
+    "dev": "webpack --mode development --entry ./src/index.js --output-path ./static/${FRONTEND_APP_NAME}",
+    "build": "webpack --mode production --entry ./src/index.js --output-path ./static/${FRONTEND_APP_NAME}",
+.
+xit
+EOF
+
+        # Install babel
+        echo -e "Installing babel..."
+        npm i @babel/core babel-loader @babel/preset-env @babel/preset-react --save-dev
+
+        # Configure babel
+        echo -e "Configuring babel..."
+        cat <<EOF > .babelrc
+{
+    "presets": [
+        "@babel/preset-env", "@babel/preset-react"
+    ]
+}
+EOF
+
+        # Install react, react-dom and react-router-dom
+        echo -e "Installing react, react-dom and react-router-dom..."
+        npm i react react-dom react-router-dom --save-dev
+
+        # Configure babel loader in webpack configuration
+        echo -e "Configuring babel loader in webpack configuration..."
+        cat <<EOF > webpack.config.js
+module.exports = {
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: "babel-loader"
+                }
+            }
+        ]
+    }
+};
+EOF
+
+        # Create index.js
+        echo -e "Creating index.js..."
+        cat <<EOF > src/index.js
+import App from "./components/App";
+EOF
+
+        # Create App.js
+        echo -e "Creating App.js..."
+        cat <<EOF > src/components/App.js
+import React, { Component } from "react";
+import { render } from "react-dom";
+//import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+
+class App extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            readAllData: [],
+            readData: [],
+            postData: {},
+            id: ""
+        };
+        this.handleChange = this.handleChange.bind(this);
+        //this.handleSubmit = this.handleSubmit.bind(this);
+        this.CreateUserAPI = this.CreateUserAPI.bind(this);
+        this.ReadAllUsersAPI = this.ReadAllUsersAPI.bind(this);
+        this.ReadUserAPI = this.ReadUserAPI.bind(this);
+        this.UpdateUserAPI = this.UpdateUserAPI.bind(this);
+        this.DeleteUserAPI = this.DeleteUserAPI.bind(this);
+    }
+
+    componentDidMount() {
+        //this.ReadAllUsersAPI();
+    }
+
+    handleChange(event) {
+        const data = this.state.postData;
+        if(event.target.name == "id") {
+            this.setState({
+                id: event.target.value
+            })
+            return
+        }
+        
+        if(event.target.name == "status") {
+            if(event.target.checked) {
+                data["status"] = true;
+            }
+            else {
+                data["status"] = false;
+            }
+        }
+        else {
+            if(!event.target.name && data.hasOwnProperty(event.target.name)) {
+                delete data[event.target.name];
+            }
+            else {
+                data[event.target.name] = event.target.value;
+            }
+        }
+        this.setState({
+            postData: data
+        });
+    }
+
+    /*handleSubmit(event) {
+        event.preventDefault();
+    }*/
+
+    CreateUserAPI() {
+        console.log("Creating...");
+        fetch("/api/users/", {
+            method: "POST",
+            body: JSON.stringify(this.state.postData),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        .then(response => {
+            if (response.status > 400) {
+                console.log("Error in POST request");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.log(json);
+            this.ReadAllUsersAPI();
+        });
+    }
+
+    ReadAllUsersAPI() {
+        console.log("Reading...");
+        fetch("/api/users/")
+        .then(response => {
+            if (response.status > 400) {
+                console.log("Error in GET request");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.log(json);
+            this.setState({
+                readAllData: json
+            });
+        });
+    }
+
+    ReadUserAPI() {
+        console.log("Reading Single Entry...");
+        fetch("/api/users/" + this.state.id + "/")
+        .then(response => {
+            if (response.status > 400) {
+                console.log("Error in GET request");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.log(json);
+            this.setState({
+                readData: json
+            });
+        });
+    }
+
+    UpdateUserAPI() {
+        console.log("Updating...");
+        fetch("/api/users/" + this.state.id + "/", {
+            method: "PATCH",
+            body: JSON.stringify(this.state.postData),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        .then(response => {
+            if (response.status > 400) {
+                console.log("Error in PATCH request");
+            }
+            return response.json();
+        })
+        .then(json => {
+            console.log(json);
+            this.ReadAllUsersAPI();
+        });
+    }
+
+    DeleteUserAPI() {
+        console.log("Deleting...");
+        fetch("/api/users/" + this.state.id + "/", {
+            method: "DELETE"
+        })
+        .then(response => {
+            console.log(response);
+            this.ReadAllUsersAPI();
+        });
+    }
+
+    render() {
+        return (
+            <div>
+                <h1 className="display-1">Django application</h1>
+                <h1 className="display-4">Welcome to the home page!</h1>
+            </div>
+        );
+    }
+}
+
+export default App;
+
+const container = document.getElementById("app");
+render(<App />, container);
+EOF
+
+        # Run webpack
+        echo -e "Running webpack..."
+        npm run dev
+
+        # Create frontend gitignore
+        echo -e "Creating gitignore for frontend app..."
+        cat <<EOF > .gitignore
+.idea/
+.vscode/
+node_modules/
+build
+.DS_Store
+*.tgz
+my-app*
+template/src/__tests__/__snapshots__/
+lerna-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/.changelog
+.npm/
+yarn.lock
+EOF
+
+        # Create launch script
+        cd ..
+        echo -e "Creating launch script..."
+        cat <<EOF > launch.sh
+#!/bin/sh
+
+PYTHON_CMD="python3"
+which \$PYTHON_CMD >/dev/null 2>&1
+if [[ "\$?" -ne 0 ]]; then
+    PYTHON_CMD="python"
+fi
+
+SCRIPT_DIR=\`dirname \${BASH_SOURCE[0]}\`
+cd \$SCRIPT_DIR
+
+set -e
+
+\$PYTHON_CMD manage.py makemigrations
+\$PYTHON_CMD manage.py migrate
+
+cd $FRONTEND_APP_NAME
+npm run dev
+
+cd ..
+\$PYTHON_CMD manage.py runserver
+EOF
+    fi
+
+    # Create main gitignore
+    echo -e "Creating gitignore for top directory..."
+    cat <<EOF > .gitignore
+env/
+__pycache__/
+*.sqlite3
+EOF
+
+    echo -e "\nFinished creating Django project!"
+    if [ ! -z $SETUP_REACT ]; then
+        echo -e "ReactJS frontend integrations successful"
+        echo -e "Try doing ./launch.sh and head over to http://localhost:8000 on your browser!"
+    fi
 }
 
 # ----------------------------------------------------------------------
@@ -626,28 +1022,41 @@ print_usage() {
     echo -e "\nOptions:"
     echo -e "\t-p = project name (Django only)"
     echo -e "\t-a = app name"
-    echo -e "\t-d, setup SQLite3 database (Flask only)"
-    echo -e "\t-R, setup Django REST Framework (Django only)"
+    echo -e "\t-d,  setup SQLite3 database (Flask only)"
+    echo -e "\t-R,  setup Django REST Framework (Django only)"
+    echo -e "\t-r,  setup ReactJS frontend (Django only)"
     echo -e "\t-t = time zone (Django only)"
-    echo -e "\t-h, show help"
+    echo -e "\t-h,  show help"
     echo -e "\nSupported frameworks:"
     echo -e "\t- Flask"
     echo -e "\t- Django"
     echo -e "\t- PyQt5"
 }
 
-PYTHON_CMD="python"
-PIP_CMD="pip"
+PYTHON_CMD="python3"
+which $PYTHON_CMD >/dev/null 2>&1
+if [[ "$?" -ne 0 ]]; then
+    PYTHON_CMD="python"
+fi
+
+PIP_CMD="pip3"
+which $PIP_CMD >/dev/null 2>&1
+if [[ "$?" -ne 0 ]]; then
+    PIP_CMD="pip"
+fi
+
 PROJ_NAME="myproject"
 APP_NAME="myapp"
 TIME_ZONE="EST"
 
-while getopts "p:a:dRt:h" flag; do
+while getopts "p:a:dRrt:h" flag; do
     case "$flag" in
         p)  PROJ_NAME=${OPTARG};;
         a)  APP_NAME=${OPTARG};;
         d)  SETUP_DATABASE="TRUE";;
         R)  SETUP_REST_API="TRUE";;
+        r)  SETUP_REST_API="TRUE"
+            SETUP_REACT="TRUE";;
         t)  TIME_ZONE=${OPTARG};;
         h)  print_usage
             exit 0;;
