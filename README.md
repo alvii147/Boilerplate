@@ -135,7 +135,7 @@ Browsable REST API at `https://localhost:8000/api/users/`:
 
 ### React.JS Integration
 
-<img src="img/react_logo.PNG" alt="ReactJS logo" width="300"/>
+<img src="img/reactjs_logo.PNG" alt="ReactJS logo" width="300"/>
 
 `createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using webpack, babel and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
 
