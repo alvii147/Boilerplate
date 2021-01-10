@@ -14,6 +14,7 @@ alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 
 - [Flask](#flask)
 - [Django](#django)
+- [Django-React.JS](#reactjs-integration)
 - [PyQt5](#pyqt5)
 
 ## Flask
