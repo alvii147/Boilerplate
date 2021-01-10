@@ -912,8 +912,6 @@ EOF
         cd ..
         echo -e "Creating launch script..."
         cat <<EOF > launch.sh
-#!/bin/sh
-
 PYTHON_CMD="python3"
 which \$PYTHON_CMD >/dev/null 2>&1
 if [[ "\$?" -ne 0 ]]; then
@@ -947,7 +945,8 @@ EOF
     echo -e "\nFinished creating Django project!"
     if [ ! -z $SETUP_REACT ]; then
         echo -e "ReactJS frontend integrations successful"
-        echo -e "Try doing ./launch.sh and head over to http://localhost:8000 on your browser!"
+        echo -e "Do a 'cd $PROJ_NAME' and then try './launch.sh'"
+        echo -e "And open up http://localhost:8000 on your browser!"
     fi
 }
 
