@@ -12,20 +12,31 @@
 
 flask_boilerplate() {
     # Check for flask and flasksqlalchemy installation
+    echo -e "Verifying requirements..."
     flask_install=`$PYTHON_CMD -c "import flask" 2>&1`
-    flask_sqlalchemy_install=`$PYTHON_CMD -c "import flask_sqlalchemy" 2>&1`
     if [ ! -z "$flask_install" ]; then
         echo -e "\nWARNING: Flask is not installed"
         echo -e "Please install Flask"
         echo -e "Run \"pip install flask\""
+    else
+        echo -e "Found Flask installation"
     fi
-    if [ ! -z "$flask_sqlalchemy_install" ]; then
-        echo -e "\nWARNING: Flask SQLAlchemy is not installed"
-        echo -e "Please install Flask SQLAlchemy"
-        echo -e "Run \"pip install flask-sqlalchemy\""
+    if [ ! -z $SETUP_DATABASE ]; then
+        flask_sqlalchemy_install=`$PYTHON_CMD -c "import flask_sqlalchemy" 2>&1`
+        if [ ! -z "$flask_sqlalchemy_install" ]; then
+            echo -e "\nWARNING: Flask SQLAlchemy is not installed"
+            echo -e "Please install Flask SQLAlchemy"
+            echo -e "Run \"pip install flask-sqlalchemy\""
+        else
+            echo -e "Found Flask SQLAlchemy installation"
+        fi
     fi
 
+    mkdir -p $APP_NAME
+    cd $APP_NAME
+
     # Random string for secret key
+    echo -e "Generating secret key..."
     secret_key=`openssl rand -base64 12`
 
     # Import SQLAlchemy
@@ -38,6 +49,7 @@ EOS
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+
 EOS
 
     # User model for database
@@ -59,13 +71,14 @@ EOS
         unset import_sqlalchemy db_config user_model db_create_all
     fi
 
-    # Write to app.py
-    cat > $APP_NAME.py <<EOF
+    # Write to main app file
+    echo -e "Creating $APP_NAME.py..."
+    cat <<EOF > $APP_NAME.py
 from flask import Flask, render_template
 ${import_sqlalchemy}
 app = Flask(__name__)
-app.secret_key = "${secret_key}"${db_config}
-${user_model}
+app.secret_key = "${secret_key}"
+${db_config}${user_model}
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -75,9 +88,10 @@ ${db_create_all}    app.run(debug=True)
 EOF
 
     # HTML templates
+    echo -e "Creating home.html..."
     mkdir -p templates
     cd templates
-    cat > home.html <<EOF
+    cat <<EOF > home.html
 <!DOCTYPE html>
 <html>
     <head>
@@ -96,28 +110,29 @@ EOF
 EOF
 
     # Style sheets
+    echo -e "Creating styles.css..."
     cd ..
     mkdir -p static
     cd static
     cat > styles.css <<EOF
 .centerdiv {
-  margin: auto;
-  width: 50%;
-  border: 3px solid black;
-  border-radius: 5px;
-  padding: 10px;
+    margin: auto;
+    width: 50%;
+    border: 3px solid black;
+    border-radius: 5px;
+    padding: 10px;
 }
 .centerh1 {
-  margin: auto;
-  width: 50%;
-  padding: 10px;
-  font-family: Georgia;
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+    font-family: Georgia;
 }
 .centerimg {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
 }
 EOF
 }
@@ -232,6 +247,14 @@ EOS
         unset frontend_app
     fi
 
+    if [ -z $SETUP_REACT ]; then
+        main_url_path="${APP_NAME}.app_urls"
+        main_url_name="app-home"
+    else
+        main_url_path="${FRONTEND_APP_NAME}.urls"
+        main_url_name="frontend-index"
+    fi
+
     # Add apps to INSTALLED_APPS
     echo -e "Adding apps to INSTALLED_APPS in settings.py..."
     MATCH_LINE=`grep -n INSTALLED_APPS ${PROJ_NAME}/settings.py | cut -f1 -d:`
@@ -254,7 +277,7 @@ EOF
 
     # Add login redirect url
     echo -e "Setting login redirect URL..."
-    echo -e "\nLOGIN_REDIRECT_URL = 'home'" >> ${PROJ_NAME}/settings.py
+    echo -e "\nLOGIN_REDIRECT_URL = '${main_url_name}'" >> ${PROJ_NAME}/settings.py
 
     # Configure project urls
     echo -e "Setting up project URLs..."
@@ -262,12 +285,6 @@ EOF
         IFS= read -r -d '' rest_api_url <<EOS
     path('api/', include('${APP_NAME}.api_urls')),
 EOS
-    fi
-
-    if [ -z $SETUP_REACT ]; then
-        main_url_path="${APP_NAME}.app_urls"
-    else
-        main_url_path="${FRONTEND_APP_NAME}.urls"
     fi
 
     cat <<EOF > ${PROJ_NAME}/urls.py
@@ -288,7 +305,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name = 'home'),
+    path('', views.home, name = '${main_url_name}'),
 ]
 EOF
 
@@ -314,8 +331,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('users/', views.UserListCreate.as_view(), name = "api-users-list-create"),
-    path('users/<int:pk>/', views.UserGetUpdateDelete.as_view(), name = "api-users-get-update-delete"),
+    path('users/', views.UserListCreate.as_view(), name = 'api-users-list-create'),
+    path('users/<int:pk>/', views.UserGetUpdateDelete.as_view(), name = 'api-users-get-update-delete'),
 ]
 EOF
     fi
@@ -328,7 +345,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.index ),
+    path('', views.index , name = '${main_url_name}'),
 ]
 EOF
     fi
@@ -962,15 +979,22 @@ EOF
 
 pyqt5_boilerplate() {
     # Check for pyqt5 installation
+    echo -e "Verifying requirements..."
     pyqt5_install=`$PYTHON_CMD -c "import PyQt5" 2>&1`
     if [ ! -z "$pyqt5_install" ]; then
         echo -e "\nWARNING: PyQt5 is not installed"
         echo -e "Please install PyQt5"
         echo -e "Run \"pip install pyqt5\""
+    else
+        echo -e "Found PyQt5 installation"
     fi
 
+    mkdir -p $APP_NAME
+    cd $APP_NAME
+
     # Write to main PyQt5 file
-    cat > $APP_NAME.py <<EOF
+    echo -e "Creating $APP_NAME.py..."
+    cat <<EOF > $APP_NAME.py
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt
