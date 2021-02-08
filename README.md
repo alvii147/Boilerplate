@@ -195,7 +195,7 @@ python3 pyqt5app.py
 
 ## React Native
 
-<img src="img/expo_react_native_logo.PNG" alt="Expo React logo" width="500"/>
+<img src="img/expo_reactnative_logo.PNG" alt="Expo React logo" width="500"/>
 
 ### Usage
 
