@@ -16,6 +16,7 @@ alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 - [Django](#django)
 - [Django-React.JS](#reactjs-integration)
 - [PyQt5](#pyqt5)
+- [React Native](#react-native)
 
 ## Flask
 
@@ -191,3 +192,46 @@ python3 pyqt5app.py
 ```
 
 ![PyQt5 application](img/pyqt5_screenshot.PNG)
+
+## React Native
+
+<img src="img/expo_react_native_logo.PNG" alt="Expo React logo" width="500"/>
+
+### Usage
+
+```
+createboilerplate [OPTIONS] reactnative
+```
+
+### Options
+
+```
+-a = app name
+```
+
+### Requirements
+
+Install [npm.](https://nodejs.org/en/)
+Install [Expo CLI](https://docs.expo.io/workflow/expo-cli/)
+
+```
+npm install -g expo-cli
+```
+
+### Example Use
+
+```
+createboilerplate -a app reactnative
+```
+
+This creates a boilerplate [React Native](https://reactnative.dev/) application using the Expo CLI.
+
+![React Native Tree Structure](img/reactnative_tree.PNG)
+
+The generated application incorporates [React Native Stack Navigation](https://reactnavigation.org/docs/stack-navigator/) to switch between app and authentication flow, and includes [Bottom Tab Navigation](https://reactnavigation.org/docs/material-bottom-tab-navigator/) to switch between Home, Profile, Notifications and Settings screens. This can be seen by running the app and scanning the QR code on the Expo Developers Tool page at `http://localhost:19002/` using the expo app downloaded on any Android or iOS device:
+
+```
+expo start
+```
+
+![React Native Screenshots](img/reactnative_screenshots.PNG)
