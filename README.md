@@ -112,7 +112,7 @@ pip install djangorestframework
 ### Example Use
 
 ```
-createboilerplate -p django_proj -a django_app -R -t EST django
+createboilerplate -p DjangoProj -a DjangoApp -R -t EST django
 ```
 
 This creates a [Django](https://www.djangoproject.com/) project and application. The application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The [Django REST framework](https://www.django-rest-framework.org/) option also sets up a REST API that allows CRUD operations.
@@ -127,7 +127,7 @@ python manage.py runserver
 
 Home page at `https://localhost:8000/`:
 
-![Django Homepage](img/django_homepage_screenshot.PNG)
+![Django Homepage](img/django_homepage_screenshot.gif)
 
 Login page at `https://localhost:8000/accounts/login/`:
 
