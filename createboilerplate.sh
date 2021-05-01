@@ -274,6 +274,10 @@ EOF
     echo -e "Setting time zone..."
     sed -i -E "s/TIME_ZONE\s*=\s*\S+/TIME_ZONE = '${TIME_ZONE}'/g" ${PROJ_NAME}/settings.py
 
+    # Configure user model from default
+    echo -e "Configuring user model from default..."
+    echo -e "AUTH_USER_MODEL = '${APP_NAME}.User'" >> ${PROJ_NAME}/settings.py
+
     # Add crispy forms
     echo -e "Setting crispy forms bootstrap version..."
     echo -e "\nCRISPY_TEMPLATE_PACK = 'bootstrap4'" >> ${PROJ_NAME}/settings.py
@@ -353,204 +357,457 @@ urlpatterns = [
 EOF
     fi
 
-    # Create base.html
-    echo -e "Creating base.html..."
+    # Create home.html
+    echo -e "Creating home.html..."
     mkdir -p ${APP_NAME}/templates/${APP_NAME}
-    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/base.html
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/home.html
 {% load static %}
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/styles_base.css' %}">
-        <title>{% block title %}{% endblock %}</title>
+        {% include "${APP_NAME}/include/head.html" %}
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/global_styles.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/home.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/navbar.css' %}">
+        <title>${APP_NAME}</title>
     </head>
     <body>
-        <header class="site-header">
-            <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
-                <div class="container">
-                    <a class="navbar-brand mr-4" href="/">${PROJ_NAME}</a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarToggle">
-                        <div class="navbar-nav mr-auto">
-                            <a class="nav-item nav-link" href="/">Home</a>
-                        </div>
-                        <div class="navbar-nav">
-                            {% if user.is_authenticated %}
-                                <a class="nav-item nav-link" href="#">Welcome, {{ user.first_name }}</a>
-                                <a class="nav-item nav-link" href="{% url 'accounts-logout' %}">Logout</a>
-                            {% else %}
-                                <a class="nav-item nav-link" href="{% url 'accounts-login' %}">Login</a>
-                                <a class="nav-item nav-link" href="{% url 'accounts-register' %}">Register</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </header>
-        <main role="main" class="container">
+        {% include "${APP_NAME}/include/navbar.html" %}
+        {% include "${APP_NAME}/include/messages.html" %}
+        <div class="container">
             <div class="row">
                 <div class="col-md-8">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class = "alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                    {% block body %}{% endblock %}
+                    <h1 class="display-3">Django Application</h1>
+                    <button class="green-button">Green</button>
+                    <button class="red-button">Red</button>
+                    <button class="orange-button">Orange</button>
+                    <button class="blue-button">Blue</button>
+                    <button class="yellow-button">Yellow</button>
+                    <button class="pink-button">Pink</button>
+                </div>
+                <div class="col-md-4">
+                    {% include "${APP_NAME}/include/westcoastlove.html" %}
                 </div>
             </div>
-        </main>
-        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-        {% block src %}{% endblock %}
+        </div>
+        {% include "${APP_NAME}/include/scripts.html" %}
     </body>
 </html>
-EOF
-
-    # Create styles_base.css
-    echo -e "Creating styles_base.css..."
-    mkdir -p ${APP_NAME}/static/${APP_NAME}
-    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/styles_base.css
-body {
-  background: #fafafa;
-  color: #333333;
-  margin-top: 5rem;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  color: #444444;
-}
-
-ul {
-  margin: 0;
-}
-
-.bg-steel {
-  background-image: linear-gradient(to right, rgb(0, 230, 77) , rgb(51, 204, 204));
-}
-
-.site-header .navbar-nav .nav-link {
-  color: rgb(242, 242, 242);
-}
-
-.site-header .navbar-nav .nav-link:hover {
-  color: rgb(255, 255, 255);
-}
-
-.site-header .navbar-nav .nav-link.active {
-  font-weight: 500;
-}
-
-.content-section {
-  background: rgb(255, 255, 255);
-  padding: 10px 20px;
-  border: 1px solid #dddddd;
-  border-radius: 3px;
-  margin-bottom: 20px;
-}
-EOF
-
-    # Create home.html
-    echo -e "Creating home.html..."
-    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/home.html
-{% extends "${APP_NAME}/base.html" %}
-{% block title %}
-    Home Page
-{% endblock %}
-{% block body %}
-    <h1 class="display-1">Django application</h1>
-    <h1 class="display-4">Welcome to the home page!</h1>
-{% endblock %}
-{% block src %}
-{% endblock %}
 EOF
 
     # Create register.html
     echo -e "Creating register.html..."
     cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/register.html
-{% extends "${APP_NAME}/base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
-{% block title %}
-    Register Account
-{% endblock %}
-{% block body %}
-    <div class = "content-section">
-        <form method = "POST">
-            {% csrf_token %}
-            <fieldset class = "form-group">
-                <legend class = "border-bottom mb-4">Register for an account</legend>
-                {{ form|crispy }}
-            </fieldset>
-            <div class = "form-group">
-                <button class = "btn btn-outline-info" type = "submit">Sign Up</button>
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "${APP_NAME}/include/head.html" %}
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/global_styles.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/forms.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/navbar.css' %}">
+        <title>Register</title>
+    </head>
+    <body>
+        {% include "${APP_NAME}/include/navbar.html" %}
+        {% include "${APP_NAME}/include/messages.html" %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class = "form-content">
+                        <form method = "POST">
+                            {% csrf_token %}
+                            <fieldset class = "form-group">
+                                <legend class = "border-bottom mb-4">Register for an account</legend>
+                                {{ form|crispy }}
+                            </fieldset>
+                            <div class = "form-group">
+                                <button class="green-button" type="submit">Register</button>
+                            </div>
+                        </form>
+                        <div class = "border-top pt-3">
+                            <small class = "text-muted">
+                                Already have an account? <a class = "ml-2" href = "{% url 'accounts-login' %}">Login</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                </div>
             </div>
-        </form>
-        <div class = "border-top pt-3">
-            <small class = "text-muted">
-                Already have an account? <a class = "ml-2" href = "{% url 'accounts-login' %}">Login</a>
-            </small>
         </div>
-    </div>
-{% endblock %}
-{% block src %}
-{% endblock %}
+        {% include "${APP_NAME}/include/scripts.html" %}
+    </body>
+</html>
 EOF
 
     # Create login.html
     echo -e "Creating login.html..."
     cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/login.html
-{% extends "${APP_NAME}/base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
-{% block title %}
-    Log In
-{% endblock %}
-{% block body %}
-    <div class = "content-section">
-        <form method = "POST">
-            {% csrf_token %}
-            <fieldset class = "form-group">
-                <legend class = "border-bottom mb-4">Log in to your account</legend>
-                {{ form|crispy }}
-            </fieldset>
-            <div class = "form-group">
-                <button class = "btn btn-outline-info" type = "submit">Login</button>
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "${APP_NAME}/include/head.html" %}
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/global_styles.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/forms.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/navbar.css' %}">
+        <title>Login</title>
+    </head>
+    <body>
+        {% include "${APP_NAME}/include/navbar.html" %}
+        {% include "${APP_NAME}/include/messages.html" %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class = "form-content">
+                        <form method = "POST">
+                            {% csrf_token %}
+                            <fieldset class = "form-group">
+                                <legend class = "border-bottom mb-4">Log in to your account</legend>
+                                {{ form|crispy }}
+                            </fieldset>
+                            <div class = "form-group">
+                                <button class="green-button" type="submit">Login</button>
+                            </div>
+                        </form>
+                        <div class = "border-top pt-3">
+                            <small class = "text-muted">
+                                Don't have an account? <a class = "ml-2" href = "{% url 'accounts-register' %}"> Sign Up</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                </div>
             </div>
-        </form>
-        <div class = "border-top pt-3">
-            <small class = "text-muted">
-                Don't have an account? <a class = "ml-2" href = "{% url 'accounts-register' %}"> Sign Up</a>
-            </small>
         </div>
-    </div>
-{% endblock %}
-{% block src %}
-{% endblock %}
+        {% include "${APP_NAME}/include/scripts.html" %}
+    </body>
+</html>
 EOF
 
     # Create logout.html
     echo -e "Creating logout.html..."
     cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/logout.html
-{% extends "${APP_NAME}/base.html" %}
-{% block title %}
-    Register Account
-{% endblock %}
-{% block body %}
-    <h1 class = "display-5">You have been logged out.</h1>
-    <div class = "border-top pt-3">
-        <small class = "text-muted">
-            <a class = "ml-2" href = "{% url 'accounts-login' %}">Log In Again</a>
-        </small>
-    </div>
-{% endblock %}
-{% block src %}
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "${APP_NAME}/include/head.html" %}
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/global_styles.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/forms.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/navbar.css' %}">
+        <title>Logout</title>
+    </head>
+    <body>
+        {% include "${APP_NAME}/include/navbar.html" %}
+        {% include "${APP_NAME}/include/messages.html" %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class = "form-content">
+                        <h1 class = "display-5">You have been logged out.</h1>
+                        <div class = "border-top pt-3">
+                            <small class = "text-muted">
+                                <a class = "ml-2" href = "{% url 'accounts-login' %}">Log In Again</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                </div>
+            </div>
+        </div>
+        {% include "${APP_NAME}/include/scripts.html" %}
+    </body>
+</html>
+EOF
+
+    # Create head.html
+    echo -e "Creating head.html..."
+    mkdir -p ${APP_NAME}/templates/${APP_NAME}/include
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/include/head.html
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+EOF
+
+    # Create navbar.html
+    echo -e "Creating navbar.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/include/navbar.html
+<header class="site-header">
+    <nav class="navbar navbar-expand-md navbar-dark navbar-bg fixed-top">
+        <div class="container">
+            <a class="navbar-brand mr-4" href="/">DjangoProj</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarToggle">
+                <div class="navbar-nav mr-auto">
+                    <a class="nav-item nav-link" href="/">Home</a>
+                </div>
+                <div class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <a class="nav-item nav-link" href="#">Welcome, {{ user.first_name }}</a>
+                        <a class="nav-item nav-link" href="{% url 'accounts-logout' %}">Logout</a>
+                    {% else %}
+                        <a class="nav-item nav-link" href="{% url 'accounts-login' %}">Login</a>
+                        <a class="nav-item nav-link" href="{% url 'accounts-register' %}">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+EOF
+
+    # Create messages.html
+    echo -e "Creating messages.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/include/messages.html
+{% if messages %}
+    {% for message in messages %}
+        <div class = "alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+EOF
+
+    # Create scripts.html
+    echo -e "Creating scripts.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/include/scripts.html
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+EOF
+
+    # Create westcoastlove.html
+    echo -e "Creating westcoastlove.html..."
+    cat <<EOF > ${APP_NAME}/templates/${APP_NAME}/include/westcoastlove.html
+<h3>West Coast Love</h1>
+<h6>Emotional Oranges</h6>
+Saw you in the backyard baby<br>
+With the barbecue blazing on a Saturday, yeah<br>
+House party jumping so loud<br>
+Cristal I was sipping when he slid and he said<br>
+<br>
+Can I kick it? Yes you can<br>
+Can I kick it? Yes you can<br>
+Can I kick it? Yes we can<br>
+(Yes we can)<br>
+<br>
+Jukebox on the black top<br>
+That's that West Coast love<br>
+After school, hooking up in your drop top<br>
+West Coast love<br>
+Shooting fireworks in the sky<br>
+Oh, how the time goes by<br>
+Boy how you never left my mind<br>
+That's that West Coast love<br>
+<br>
+West Coast love<br>
+Never left my mind<br>
+West Coast love<br>
+Never left my mind<br>
+<br>
+Can we take it back to the Bay when we bounced<br>
+To the sound of my favorite band playing?<br>
+Pulled up to the park one day<br>
+Watch you shoot<br>
+It was cute so I slid and I said<br>
+<br>
+Can I kick it? Let me know<br>
+Can I kick it? Boy you gotta let me know<br>
+Take the PCH home, for some X and O's<br>
+Pour the juice, we gon' set the tone<br>
+Let's get it on now<br>
+<br>
+Jukebox on the black top<br>
+That's that West Coast love<br>
+After school, hooking up in your drop top<br>
+West Coast love<br>
+Shooting fireworks in the sky<br>
+Oh, how the time goes by<br>
+Boy how you never left my mind<br>
+That's that West Coast love<br>
+<br>
+West Coast love<br>
+Never left my mind<br>
+West Coast love<br>
+Never left my mind<br>
+<br>
+I just need you to ride for me<br>
+All you gotta do is spend time on me<br>
+Need me a man that'll die for me<br>
+Oh, oh yeah<br>
+<br>
+I just need you to ride for me (yeah)<br>
+All you gotta do is spend time on me<br>
+Need me a man (girl) that'll die for me<br>
+Oh, oh yeah (yeah)<br>
+<br>
+Jukebox on the black top<br>
+That's that West Coast love<br>
+After school, hooking up in your drop top<br>
+West Coast love<br>
+Shooting fireworks in the sky<br>
+Oh, how the time goes by (goes by)<br>
+Boy how you never left my mind<br>
+That's that West Coast love<br>
+<br>
+West Coast love<br>
+Never left my mind<br>
+West Coast love<br>
+Never left my mind<br>
+<br>
+EOF
+
+    # Create global_styles.css
+    echo -e "Creating global_styles.css..."
+    mkdir -p ${APP_NAME}/static/${APP_NAME}
+    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/global_styles.css
+:root {
+    --white: #FFFFFF;
+    --green: #1AD98D;
+    --red: #FF3300;
+    --orange: #FF9933;
+    --blue: #0066FF;
+    --yellow: #FFDD00;
+    --pink: #FF3399;
+}
+
+button {
+    transition: 0.3s;
+    padding: 6px 10px;
+    border-radius: 3px;
+}
+
+.green-button {
+    color: var(--green);
+    background-color: var(--white);
+    border: 1px solid var(--green);
+}
+
+.green-button:hover {
+    color: var(--white);
+    background-color: var(--green);
+}
+
+.red-button {
+    color: var(--red);
+    background-color: var(--white);
+    border: 1px solid var(--red);
+}
+
+.red-button:hover {
+    color: var(--white);
+    background-color: var(--red);
+}
+
+.orange-button {
+    color: var(--orange);
+    background-color: var(--white);
+    border: 1px solid var(--orange);
+}
+
+.orange-button:hover {
+    color: var(--white);
+    background-color: var(--orange);
+}
+
+.blue-button {
+    color: var(--blue);
+    background-color: var(--white);
+    border: 1px solid var(--blue);
+}
+
+.blue-button:hover {
+    color: var(--white);
+    background-color: var(--blue);
+}
+
+.yellow-button {
+    color: var(--yellow);
+    background-color: var(--white);
+    border: 1px solid var(--yellow);
+}
+
+.yellow-button:hover {
+    color: var(--white);
+    background-color: var(--yellow);
+}
+
+.pink-button {
+    color: var(--pink);
+    background-color: var(--white);
+    border: 1px solid var(--pink);
+}
+
+.pink-button:hover {
+    color: var(--white);
+    background-color: var(--pink);
+}
+EOF
+
+    # Create navbar.css
+    echo -e "Creating navbar.css..."
+    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/navbar.css
+body {
+    margin-top: 5rem;
+}
+
+.navbar-bg {
+    background-image: linear-gradient(to right, #00E64D, #33CCCC);
+}
+
+.site-header .navbar-nav .nav-link {
+    color: #F2F2F2;
+}
+
+.site-header .navbar-nav .nav-link:hover {
+    color: #FFFFFF;
+}
+
+.site-header .navbar-nav .nav-link.active {
+    font-weight: 500;
+}
+EOF
+
+    # Create home.css
+    echo -e "Creating home.css..."
+    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/home.css
+body {
+    background: #FAFAFA;
+    color: #444444;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #444444;
+}
+EOF
+
+    # Create forms.css
+    echo -e "Creating forms.css..."
+    cat  <<EOF > ${APP_NAME}/static/${APP_NAME}/forms.css
+body {
+    background: #FAFAFA;
+    color: #444444;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #444444;
+}
+
+.form-content {
+    background: #FFFFFF;
+    padding: 10px 20px;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
 EOF
 
     # Create frontend index.html
@@ -558,36 +815,113 @@ EOF
         echo -e "Creating index.html..."
         mkdir -p ${FRONTEND_APP_NAME}/{static,templates}/${FRONTEND_APP_NAME}
         cat <<EOF > ${FRONTEND_APP_NAME}/templates/${FRONTEND_APP_NAME}/index.html
-{% extends "${APP_NAME}/base.html" %}
-{% block title %}
-    Home Page
-{% endblock %}
-{% block body %}
-    <div id="app">
-    </div>
-{% endblock %}
-{% block src %}
-    {% load static %}
-    <script src="{% static '${FRONTEND_APP_NAME}/main.js' %}"></script>
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "${APP_NAME}/include/head.html" %}
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/global_styles.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/home.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static '${APP_NAME}/navbar.css' %}">
+        <title>${APP_NAME}</title>
+    </head>
+    <body>
+        {% include "${APP_NAME}/include/navbar.html" %}
+        {% include "${APP_NAME}/include/messages.html" %}
+        <div class="container">
+            <div id="app">
+            </div>
+        </div>
+        {% include "${APP_NAME}/include/scripts.html" %}
+        <script src="{% static '${FRONTEND_APP_NAME}/main.js' %}"></script>
+    </body>
+</html>
 EOF
     fi
+
+    # Create user model and user manager
+    echo -e "Create user model and user manager..."
+    cat <<EOF > ${APP_NAME}/models.py
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+
+class UserManager(BaseUserManager):
+    def create_user(self, username, email, first_name, last_name, password = None):
+        if not username:
+            raise ValueError('Users must have a valid username')
+
+        if not email:
+            raise ValueError('Users must have a valid email address')
+
+        user = self.model(
+            username = username,
+            email = self.normalize_email(email),
+            first_name = first_name,
+            last_name = last_name,
+        )
+
+        user.set_password(password)
+        user.save(using = self._db)
+
+        return user
+
+    def create_superuser(self, username, email, first_name, last_name, password):
+        user = self.create_user(
+            username = username,
+            email = self.normalize_email(email),
+            first_name = first_name,
+            last_name = last_name,
+            password = password,
+        )
+
+        user.is_admin = True
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using = self._db)
+
+        return user
+
+class User(AbstractBaseUser):
+    username = models.CharField(max_length = 30, unique = True)
+    email = models.EmailField(verbose_name = 'email', max_length = 60, unique = True)
+    first_name = models.CharField(max_length = 255, blank = True)
+    last_name = models.CharField(max_length = 255, blank = True)
+
+    is_admin = models.BooleanField(default = False)
+    is_active = models.BooleanField(default = True)
+    is_staff = models.BooleanField(default = False)
+    is_superuser = models.BooleanField(default = False)
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.username
+
+    def has_perm(self, perm, obj = None):
+        return self.is_admin
+
+    def has_module_perms(self, app_label):
+        return True
+EOF
 
     # Create user registration form
     echo -e "Creating user registrations form..."
     cat <<EOF > ${APP_NAME}/forms.py
 from django import forms
-from django.contrib.auth.models import User
+from .models import User
 from django.contrib.auth.forms import UserCreationForm
 
 class UserRegisterForm(UserCreationForm):
+    email = forms.EmailField(label = 'Email', required = True, help_text = 'Enter email address', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. wwilson@xforce.com'}))
     first_name = forms.CharField(label = 'First Name', required = True, help_text = 'Enter first name', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. Wade'}))
     last_name = forms.CharField(label = 'Last Name', required = True, help_text = 'Enter last name', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. Wilson'}))
-    email = forms.EmailField(label = 'Email', required = True, help_text = 'Enter email address', widget = forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. wwilson@xforce.com'}))
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
         widgets = {
             'username' : forms.TextInput(attrs = {'class' : 'form-control', 'placeholder' : 'eg. wwilson1991'}),
         }
@@ -603,7 +937,7 @@ EOF
 
     if [ ! -z $SETUP_REST_API ]; then
         cat <<EOF >> ${APP_NAME}/views.py
-from django.contrib.auth.models import User
+from .models import User
 from .serializers import UserSerializer
 from rest_framework import generics
 EOF
@@ -659,7 +993,7 @@ EOF
         echo -e "Creating serializers..."
         cat <<EOF > ${APP_NAME}/serializers.py
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -667,6 +1001,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 EOF
     fi
+
+    # Create reset_db.sh
+    echo -e "Creating reset_db.sh..."
+    cat <<EOF > reset_db.sh
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find . -path "*/migrations/*.pyc"  -delete
+rm db.sqlite3
+python manage.py makemigrations
+python manage.py migrate
+EOF
 
     # Apply migrations
     echo -e "Creating migrations..."
