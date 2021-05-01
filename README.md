@@ -2,14 +2,6 @@
 
 `createboilerplate.sh` is a bash script for generating boilerplate code for projects based on specific libraries and frameworks. It's intended to help kickstart projects by laying out the empty templates and take over the repetitive task of setting initial configurations.
 
-## Setting up an alias
-
-It's convenient to set up an alias for the path to this script so it can be called from anywhere.
-
-```
-alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
-```
-
 ## Supported Libraries & Frameworks
 
 - [Django](#django)
@@ -18,9 +10,19 @@ alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 - [PyQt5](#pyqt5)
 - [React Native](#react-native)
 
+## Getting Started
+
+`createboilerplate.sh` is a standalone script, so there are neither any external dependencies, nor any within the repository. Only the script is required for generating code. It's convenient to set up an alias for the path to this script so it can be called from anywhere. Add the following line to `.bashrc` or `.bashprofile` to set up a permanent alias.
+
+```
+alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
+```
+
+There are some dependencies within the individual projects, all of which are explored below.
+
 ## Django
 
-<img src="img/django_logo.png" alt="Django logo" width="300"/>
+<p align="center"><img src="img/django_logo.png" alt="Django logo" width="300"/></p>
 
 ### Usage
 
@@ -38,21 +40,21 @@ createboilerplate [OPTIONS] django
 -t = time zone
 ```
 
-### Dependencies
+### Requirements
 
-Install Django
+Install Django.
 
 ```
 pip install django
 ```
 
-Install Django Crispy Forms
+Install Django Crispy Forms.
 
 ```
 pip install django-crispy-forms
 ```
 
-Install Django REST framework (optional, but required for REST framework option)
+Install Django REST framework (optional, but required for REST framework option).
 
 ```
 pip install djangorestframework
@@ -66,7 +68,7 @@ pip install djangorestframework
 createboilerplate -p DjangoProj -a DjangoApp -R -t EST django
 ```
 
-This creates a [Django](https://www.djangoproject.com/) project and application. The application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The [Django REST framework](https://www.django-rest-framework.org/) option also sets up a REST API that allows CRUD operations.
+This creates a [Django](https://www.djangoproject.com/) project and application. The application includes, a custom user model, a user registration page and a user login page, rendered with Bootstrap 4 HTML templates. The [Django REST framework](https://www.django-rest-framework.org/) option also sets up a REST API that allows CRUD operations.
 
 ![Django Tree Structure](img/django_tree.png)
 
@@ -94,7 +96,7 @@ Browsable REST API at `https://localhost:8000/api/users/`:
 
 ### React.JS Integration
 
-<img src="img/reactjs_logo.png" alt="ReactJS logo" width="300"/>
+<p align="center"><img src="img/reactjs_logo.png" alt="ReactJS logo" width="300"/></p>
 
 `createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using [webpack](https://webpack.js.org/), [babel](https://babeljs.io/) and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
 
@@ -108,7 +110,7 @@ This also creates a `launch.sh`, intended to be used as a shortcut to run both t
 
 ## Flask
 
-<img src="img/flask_logo.png" alt="Flask logo" width="300"/>
+<p align="center"><img src="img/flask_logo.png" alt="Flask logo" width="300"/></p>
 
 ### Usage
 
@@ -125,13 +127,13 @@ createboilerplate [OPTIONS] flask
 
 ### Requirements
 
-Install Flask
+Install Flask.
 
 ```
 pip install flask
 ```
 
-Install Flask SQLAlchemy (optional, required for setup database option)
+Install Flask SQLAlchemy (optional, required for setup database option).
 
 ```
 pip install flask-sqlalchemy
@@ -157,7 +159,7 @@ python3 flaskapp.py
 
 ## PyQt5
 
-<img src="img/qt_logo.png" alt="Qt logo" width="300"/>
+<p align="center"><img src="img/qt_logo.png" alt="Qt logo" width="300"/></p>
 
 ### Usage
 
@@ -173,7 +175,7 @@ createboilerplate [OPTIONS] pyqt5
 
 ### Requirements
 
-Install PyQt5
+Install PyQt5.
 
 ```
 pip install pyqt5
@@ -195,7 +197,7 @@ python3 pyqt5app.py
 
 ## React Native
 
-<img src="img/expo_reactnative_logo.png" alt="Expo React logo" width="500"/>
+<p align="center"><img src="img/expo_reactnative_logo.png" alt="Expo React logo" width="500"/></p>
 
 ### Usage
 
@@ -212,7 +214,7 @@ createboilerplate [OPTIONS] reactnative
 ### Requirements
 
 Install [npm.](https://nodejs.org/en/)
-Install [Expo CLI](https://docs.expo.io/workflow/expo-cli/)
+Install [Expo CLI](https://docs.expo.io/workflow/expo-cli/).
 
 ```
 npm install -g expo-cli
@@ -228,7 +230,7 @@ This creates a boilerplate [React Native](https://reactnative.dev/) application 
 
 ![React Native Tree Structure](img/reactnative_tree.png)
 
-The generated application incorporates [React Native Stack Navigation](https://reactnavigation.org/docs/stack-navigator/) to switch between app and authentication flow, and includes [Bottom Tab Navigation](https://reactnavigation.org/docs/material-bottom-tab-navigator/) to switch between Home, Profile, Notifications and Settings screens. This can be seen by running the app and scanning the QR code on the Expo Developers Tool page at `http://localhost:19002/` using the expo app downloaded on any Android or iOS device:
+The generated application incorporates [React Native Stack Navigation](https://reactnavigation.org/docs/stack-navigator/) to switch between app and authentication flow, and includes [Bottom Tab Navigation](https://reactnavigation.org/docs/material-bottom-tab-navigator/) to switch between Home, Profile, Notifications and Settings screens. This can be seen by running the app and scanning the QR code on the Expo Developers Tool page at `http://localhost:19002/` using the expo app downloaded on any Android or iOS device.
 
 ```
 expo start
