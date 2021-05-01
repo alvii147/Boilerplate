@@ -12,60 +12,11 @@ alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 
 ## Supported Libraries & Frameworks
 
-- [Flask](#flask)
 - [Django](#django)
 - [Django-React.JS](#reactjs-integration)
+- [Flask](#flask)
 - [PyQt5](#pyqt5)
 - [React Native](#react-native)
-
-## Flask
-
-<img src="img/flask_logo.png" alt="Flask logo" width="300"/>
-
-### Usage
-
-```
-createboilerplate [OPTIONS] flask
-```
-
-### Options
-
-```
--a = app name
--d,  setup SQLite3 database
-```
-
-### Requirements
-
-Install Flask
-
-```
-pip install flask
-```
-
-Install Flask SQLAlchemy (optional, required for setup database option)
-
-```
-pip install flask-sqlalchemy
-```
-
-### Example Use
-
-```
-createboilerplate -d -a flaskapp flask
-```
-
-This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS file and a SQLite3 database.
-
-![Flask App Tree Structure](img/flask_tree.png)
-
-Executing `flaskapp.py` runs the basic Flask application on `https://localhost:5000`.
-
-```
-python3 flaskapp.py
-```
-
-![localhost:5000](img/flask_screenshot.png)
 
 ## Django
 
@@ -154,6 +105,55 @@ Running the React.JS option creates a `frontend` Django application which includ
 The main component, `App.js`, includes functions written with [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) for executing create, read, update and delete operations through the Django REST framework.
 
 This also creates a `launch.sh`, intended to be used as a shortcut to run both the Django application and the webpack dev server. Executing `launch.sh` should run the server with the same application as the one without the React.JS option at `https://localhost:8000`.
+
+## Flask
+
+<img src="img/flask_logo.png" alt="Flask logo" width="300"/>
+
+### Usage
+
+```
+createboilerplate [OPTIONS] flask
+```
+
+### Options
+
+```
+-a = app name
+-d,  setup SQLite3 database
+```
+
+### Requirements
+
+Install Flask
+
+```
+pip install flask
+```
+
+Install Flask SQLAlchemy (optional, required for setup database option)
+
+```
+pip install flask-sqlalchemy
+```
+
+### Example Use
+
+```
+createboilerplate -d -a flaskapp flask
+```
+
+This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS file and a SQLite3 database.
+
+![Flask App Tree Structure](img/flask_tree.png)
+
+Executing `flaskapp.py` runs the basic Flask application on `https://localhost:5000`.
+
+```
+python3 flaskapp.py
+```
+
+![localhost:5000](img/flask_screenshot.png)
 
 ## PyQt5
 

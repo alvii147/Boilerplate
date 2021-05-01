@@ -1,143 +1,4 @@
 # ----------------------------------------------------------------------
-# Flask Boilerplate Script
-# ----------------------------------------------------------------------
-# Options:
-# -a = app name
-# -d,  setup SQLite3 database
-# ----------------------------------------------------------------------
-# Requirements:
-# - Flask
-# - Flask SQLAlchemy (if database option included)
-# ----------------------------------------------------------------------
-
-flask_boilerplate() {
-    # Check for flask and flasksqlalchemy installation
-    echo -e "Verifying requirements..."
-    flask_install=`$PYTHON_CMD -c "import flask" 2>&1`
-    if [ ! -z "$flask_install" ]; then
-        echo -e "\nWARNING: Flask is not installed"
-        echo -e "Please install Flask"
-        echo -e "Run \"pip install flask\""
-    else
-        echo -e "Found Flask installation"
-    fi
-    if [ ! -z $SETUP_DATABASE ]; then
-        flask_sqlalchemy_install=`$PYTHON_CMD -c "import flask_sqlalchemy" 2>&1`
-        if [ ! -z "$flask_sqlalchemy_install" ]; then
-            echo -e "\nWARNING: Flask SQLAlchemy is not installed"
-            echo -e "Please install Flask SQLAlchemy"
-            echo -e "Run \"pip install flask-sqlalchemy\""
-        else
-            echo -e "Found Flask SQLAlchemy installation"
-        fi
-    fi
-
-    mkdir -p $APP_NAME
-    cd $APP_NAME
-
-    # Random string for secret key
-    echo -e "Generating secret key..."
-    secret_key=`openssl rand -base64 12`
-
-    # Import SQLAlchemy
-    IFS= read -r -d '' import_sqlalchemy <<EOS
-from flask_sqlalchemy import SQLAlchemy
-EOS
-
-    # SQLite3 database configurations
-    IFS= read -r -d '' db_config <<EOS
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
-
-EOS
-
-    # User model for database
-    IFS= read -r -d '' user_model <<EOS
-class User(db.Model):
-    id = db.Column("id", db.Integer, primary_key=True)
-    name = db.Column(db.String(150))
-
-    def __init__(self, name):
-        self.name = name
-EOS
-
-    # Create database
-    IFS= read -r -d '' db_create_all <<EOS
-    db.create_all()
-EOS
-
-    if [ -z $SETUP_DATABASE ]; then
-        unset import_sqlalchemy db_config user_model db_create_all
-    fi
-
-    # Write to main app file
-    echo -e "Creating $APP_NAME.py..."
-    cat <<EOF > $APP_NAME.py
-from flask import Flask, render_template
-${import_sqlalchemy}
-app = Flask(__name__)
-app.secret_key = "${secret_key}"
-${db_config}${user_model}
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-if __name__ == "__main__":
-${db_create_all}    app.run(debug=True)
-EOF
-
-    # HTML templates
-    echo -e "Creating home.html..."
-    mkdir -p templates
-    cd templates
-    cat <<EOF > home.html
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel = "stylesheet" type = "text/css" href = "{{url_for('static', filename = 'styles.css')}}">
-        <title>My Flask App</title>
-    </head>
-    <body>
-        <div class="centerdiv">
-            <h1 class="centerh1">Welcome to your Flask app!</h1>
-            <img class="centerimg" src="https://flask.palletsprojects.com/en/1.1.x/_images/flask-logo.png" alt="Flask logo">
-        </div>
-    </body>
-</html>
-EOF
-
-    # Style sheets
-    echo -e "Creating styles.css..."
-    cd ..
-    mkdir -p static
-    cd static
-    cat > styles.css <<EOF
-.centerdiv {
-    margin: auto;
-    width: 50%;
-    border: 3px solid black;
-    border-radius: 5px;
-    padding: 10px;
-}
-.centerh1 {
-    margin: auto;
-    width: 50%;
-    padding: 10px;
-    font-family: Georgia;
-}
-.centerimg {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
-}
-EOF
-}
-
-# ----------------------------------------------------------------------
 # Django Boilerplate Script
 # ----------------------------------------------------------------------
 # Options:
@@ -1312,6 +1173,145 @@ EOF
         echo -e "Do a 'cd $PROJ_NAME' and then try './launch.sh'"
         echo -e "And open up http://localhost:8000 on your browser!"
     fi
+}
+
+# ----------------------------------------------------------------------
+# Flask Boilerplate Script
+# ----------------------------------------------------------------------
+# Options:
+# -a = app name
+# -d,  setup SQLite3 database
+# ----------------------------------------------------------------------
+# Requirements:
+# - Flask
+# - Flask SQLAlchemy (if database option included)
+# ----------------------------------------------------------------------
+
+flask_boilerplate() {
+    # Check for flask and flasksqlalchemy installation
+    echo -e "Verifying requirements..."
+    flask_install=`$PYTHON_CMD -c "import flask" 2>&1`
+    if [ ! -z "$flask_install" ]; then
+        echo -e "\nWARNING: Flask is not installed"
+        echo -e "Please install Flask"
+        echo -e "Run \"pip install flask\""
+    else
+        echo -e "Found Flask installation"
+    fi
+    if [ ! -z $SETUP_DATABASE ]; then
+        flask_sqlalchemy_install=`$PYTHON_CMD -c "import flask_sqlalchemy" 2>&1`
+        if [ ! -z "$flask_sqlalchemy_install" ]; then
+            echo -e "\nWARNING: Flask SQLAlchemy is not installed"
+            echo -e "Please install Flask SQLAlchemy"
+            echo -e "Run \"pip install flask-sqlalchemy\""
+        else
+            echo -e "Found Flask SQLAlchemy installation"
+        fi
+    fi
+
+    mkdir -p $APP_NAME
+    cd $APP_NAME
+
+    # Random string for secret key
+    echo -e "Generating secret key..."
+    secret_key=`openssl rand -base64 12`
+
+    # Import SQLAlchemy
+    IFS= read -r -d '' import_sqlalchemy <<EOS
+from flask_sqlalchemy import SQLAlchemy
+EOS
+
+    # SQLite3 database configurations
+    IFS= read -r -d '' db_config <<EOS
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.sqlite3"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
+
+EOS
+
+    # User model for database
+    IFS= read -r -d '' user_model <<EOS
+class User(db.Model):
+    id = db.Column("id", db.Integer, primary_key=True)
+    name = db.Column(db.String(150))
+
+    def __init__(self, name):
+        self.name = name
+EOS
+
+    # Create database
+    IFS= read -r -d '' db_create_all <<EOS
+    db.create_all()
+EOS
+
+    if [ -z $SETUP_DATABASE ]; then
+        unset import_sqlalchemy db_config user_model db_create_all
+    fi
+
+    # Write to main app file
+    echo -e "Creating $APP_NAME.py..."
+    cat <<EOF > $APP_NAME.py
+from flask import Flask, render_template
+${import_sqlalchemy}
+app = Flask(__name__)
+app.secret_key = "${secret_key}"
+${db_config}${user_model}
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+if __name__ == "__main__":
+${db_create_all}    app.run(debug=True)
+EOF
+
+    # HTML templates
+    echo -e "Creating home.html..."
+    mkdir -p templates
+    cd templates
+    cat <<EOF > home.html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel = "stylesheet" type = "text/css" href = "{{url_for('static', filename = 'styles.css')}}">
+        <title>My Flask App</title>
+    </head>
+    <body>
+        <div class="centerdiv">
+            <h1 class="centerh1">Welcome to your Flask app!</h1>
+            <img class="centerimg" src="https://flask.palletsprojects.com/en/1.1.x/_images/flask-logo.png" alt="Flask logo">
+        </div>
+    </body>
+</html>
+EOF
+
+    # Style sheets
+    echo -e "Creating styles.css..."
+    cd ..
+    mkdir -p static
+    cd static
+    cat > styles.css <<EOF
+.centerdiv {
+    margin: auto;
+    width: 50%;
+    border: 3px solid black;
+    border-radius: 5px;
+    padding: 10px;
+}
+.centerh1 {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+    font-family: Georgia;
+}
+.centerimg {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+EOF
 }
 
 # ----------------------------------------------------------------------
