@@ -20,7 +20,7 @@ alias createboilerplate="/absolute/path/to/./createboilerplate.sh"
 
 ## Flask
 
-<img src="img/flask_logo.PNG" alt="Flask logo" width="300"/>
+<img src="img/flask_logo.png" alt="Flask logo" width="300"/>
 
 ### Usage
 
@@ -57,7 +57,7 @@ createboilerplate -d -a flaskapp flask
 
 This creates a boilerplate Python [Flask](https://flask.palletsprojects.com/en/1.1.x/) application, with an HTML template, a CSS file and a SQLite3 database.
 
-![Flask App Tree Structure](img/flask_tree.PNG)
+![Flask App Tree Structure](img/flask_tree.png)
 
 Executing `flaskapp.py` runs the basic Flask application on `https://localhost:5000`.
 
@@ -65,11 +65,11 @@ Executing `flaskapp.py` runs the basic Flask application on `https://localhost:5
 python3 flaskapp.py
 ```
 
-![localhost:5000](img/flask_screenshot.PNG)
+![localhost:5000](img/flask_screenshot.png)
 
 ## Django
 
-<img src="img/django_logo.PNG" alt="Django logo" width="300"/>
+<img src="img/django_logo.png" alt="Django logo" width="300"/>
 
 ### Usage
 
@@ -117,7 +117,7 @@ createboilerplate -p DjangoProj -a DjangoApp -R -t EST django
 
 This creates a [Django](https://www.djangoproject.com/) project and application. The application includes user registration and login pages, rendered with Bootstrap 4 HTML templates. The [Django REST framework](https://www.django-rest-framework.org/) option also sets up a REST API that allows CRUD operations.
 
-![Django Tree Structure](img/django_tree.PNG)
+![Django Tree Structure](img/django_tree.png)
 
 The Django server can then be run on `https://localhost:8000`.
 
@@ -127,29 +127,29 @@ python manage.py runserver
 
 Home page at `https://localhost:8000/`:
 
-![Django Homepage](img/django_homepage_screenshot.gif)
+![Django Homepage](img/django_homepage_screenshot.png)
 
 Login page at `https://localhost:8000/accounts/login/`:
 
-![Django Login Page](img/django_loginpage_screenshot.PNG)
+![Django Login Page](img/django_loginpage_screenshot.png)
 
 Register page at `https://localhost:8000/accounts/register/`:
 
-![Django Register Page](img/django_registerpage_screenshot.PNG)
+![Django Register Page](img/django_registerpage_screenshot.png)
 
 Browsable REST API at `https://localhost:8000/api/users/`:
 
-![Django Rest Framwork Page](img/django_restframework_screenshot.PNG)
+![Django Rest Framwork Page](img/django_restframework_screenshot.png)
 
 ### React.JS Integration
 
-<img src="img/reactjs_logo.PNG" alt="ReactJS logo" width="300"/>
+<img src="img/reactjs_logo.png" alt="ReactJS logo" width="300"/>
 
 `createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using [webpack](https://webpack.js.org/), [babel](https://babeljs.io/) and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
 
 Running the React.JS option creates a `frontend` Django application which includes all React components and dependencies:
 
-![Django-React frontend app tree](img/djangoreact_tree.PNG)
+![Django-React frontend app tree](img/djangoreact_tree.png)
 
 The main component, `App.js`, includes functions written with [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) for executing create, read, update and delete operations through the Django REST framework.
 
@@ -157,7 +157,7 @@ This also creates a `launch.sh`, intended to be used as a shortcut to run both t
 
 ## PyQt5
 
-<img src="img/qt_logo.PNG" alt="Qt logo" width="300"/>
+<img src="img/qt_logo.png" alt="Qt logo" width="300"/>
 
 ### Usage
 
@@ -191,11 +191,11 @@ This creates a boilerplate [PyQt5](https://riverbankcomputing.com/software/pyqt/
 python3 pyqt5app.py
 ```
 
-![PyQt5 application](img/pyqt5_screenshot.PNG)
+![PyQt5 application](img/pyqt5_screenshot.png)
 
 ## React Native
 
-<img src="img/expo_reactnative_logo.PNG" alt="Expo React logo" width="500"/>
+<img src="img/expo_reactnative_logo.png" alt="Expo React logo" width="500"/>
 
 ### Usage
 
@@ -226,7 +226,7 @@ createboilerplate -a app reactnative
 
 This creates a boilerplate [React Native](https://reactnative.dev/) application using the Expo CLI.
 
-![React Native Tree Structure](img/reactnative_tree.PNG)
+![React Native Tree Structure](img/reactnative_tree.png)
 
 The generated application incorporates [React Native Stack Navigation](https://reactnavigation.org/docs/stack-navigator/) to switch between app and authentication flow, and includes [Bottom Tab Navigation](https://reactnavigation.org/docs/material-bottom-tab-navigator/) to switch between Home, Profile, Notifications and Settings screens. This can be seen by running the app and scanning the QR code on the Expo Developers Tool page at `http://localhost:19002/` using the expo app downloaded on any Android or iOS device:
 
@@ -234,4 +234,4 @@ The generated application incorporates [React Native Stack Navigation](https://r
 expo start
 ```
 
-![React Native Screenshots](img/reactnative_screenshots.PNG)
+![React Native Screenshots](img/reactnative_screenshots.png)
