@@ -98,15 +98,21 @@ Browsable REST API at `https://localhost:8000/api/users/`:
 
 <p align="center"><img src="img/reactjs_logo.png" alt="ReactJS logo" width="300"/></p>
 
-`createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using [webpack](https://webpack.js.org/), [babel](https://babeljs.io/) and the Django REST framework. This can be done using the **-r** option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
+`createboilerplate.sh` also supports Django and [React.JS](https://reactjs.org/) integration using [webpack](https://webpack.js.org/), [babel](https://babeljs.io/) and the Django REST framework. This can be done using the `-r` option. Running it with the React.JS option sets up the project to render the home page using a React component instead of an HTML template (login and register pages are still rendered using HTML templates and crispy forms).
 
-Running the React.JS option creates a `frontend` Django application which includes all React components and dependencies:
+Running the React.JS option creates a `frontend` Django application which includes all React components and dependencies.
+
+```
+createboilerplate -p DjangoProj -a DjangoApp -R -r -t EST django
+```
 
 ![Django-React frontend app tree](img/djangoreact_tree.png)
 
 The main component, `App.js`, includes functions written with [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) for executing create, read, update and delete operations through the Django REST framework.
 
-This also creates a `launch.sh`, intended to be used as a shortcut to run both the Django application and the webpack dev server. Executing `launch.sh` should run the server with the same application as the one without the React.JS option at `https://localhost:8000`.
+This also creates a `launch.sh`, intended to be used as a shortcut to run both the Django application and the webpack dev server. The React.JS page should then be live on `https://localhost:8000`:
+
+![Django React Homepage](img/djangoreact_homepage_screenshot.png)
 
 ## Flask
 
