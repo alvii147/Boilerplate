@@ -1148,8 +1148,8 @@ cd \$SCRIPT_DIR
 
 set -e
 
-\$PYTHON_CMD manage.py makemigrations
-\$PYTHON_CMD manage.py migrate
+#\$PYTHON_CMD manage.py makemigrations
+#\$PYTHON_CMD manage.py migrate
 
 cd $FRONTEND_APP_NAME
 npm run dev
