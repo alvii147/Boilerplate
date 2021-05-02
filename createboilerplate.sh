@@ -1096,8 +1096,8 @@ class App extends Component {
     render() {
         return (
             <div>
-                <h1 className="display-1">Django application</h1>
-                <h1 className="display-4">Welcome to the home page!</h1>
+                <h1 className="display-3">Django Application</h1>
+                <h1 className="display-6">This content is in React.JS</h1>
             </div>
         );
     }
