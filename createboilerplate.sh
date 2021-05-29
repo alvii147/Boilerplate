@@ -1357,17 +1357,17 @@ class Window(QMainWindow):
 
     def initUI(self):
         self.setGeometry(self._xPos, self._yPos, self._width, self._height)
-        self.setWindowTitle("My PyQt5 App")
+        self.setWindowTitle('My PyQt5 App')
 
         self.vBox = QVBoxLayout()
 
         self.title = QLabel()
-        self.title.setText("Welcome to your PyQt5 App!")
+        self.title.setText('Welcome to your PyQt5 App!')
         self.title.setAlignment(Qt.AlignCenter)
         self.vBox.addWidget(self.title)
 
         self.button = QPushButton()
-        self.button.setText("Click Me")
+        self.button.setText('Click Me')
         self.button.clicked.connect(self.buttonPressed)
         self.vBox.addWidget(self.button)
 
@@ -1378,9 +1378,9 @@ class Window(QMainWindow):
         self.show()
 
     def buttonPressed(self):
-        self.statusBar().showMessage("Button pressed!")
+        self.statusBar().showMessage('Button pressed!')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     myWin = Window()
     sys.exit(app.exec_())
@@ -2055,7 +2055,8 @@ EOF
 }
 
 print_usage() {
-    echo -e "\nUsage: createboilerplate.sh [OPTIONS] <framework_name>"
+    echo -e "\nUsage:"
+    echo -e "\tcreateboilerplate.sh [OPTIONS] <framework_name>"
     echo -e "\nOptions:"
     echo -e "\t-p = project name (Django only)"
     echo -e "\t-a = app name"
@@ -2065,9 +2066,10 @@ print_usage() {
     echo -e "\t-t = time zone (Django only)"
     echo -e "\t-h,  show help"
     echo -e "\nSupported frameworks:"
-    echo -e "\t- Flask"
     echo -e "\t- Django"
+    echo -e "\t- Flask"
     echo -e "\t- PyQt5"
+    echo -e "\t- React Native"
 }
 
 PYTHON_CMD="python3"
