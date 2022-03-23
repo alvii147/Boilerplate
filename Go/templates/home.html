@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {{ template "head"}}
+    <title>{{ .title }}</title>
+  </head>
+  <body>
+    {{ template "navbar" }}
+    <br />
+    <div class="container">
+      <h1 class="display-4">{{ .header }}</h1>
+    </div>
+    {{ template "scripts" }}
+  </body>
+</html>

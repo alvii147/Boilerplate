@@ -1,6 +1,2 @@
-/*
-!Quickstartguides/
-!img/
-!.gitignore
-!README.md
-!createboilerplate.sh
+.vscode/
+.DS_Store
