@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/{{ github_username }}/{{ module_name }}/handlers"
+	"github.com/{{ github_username }}/{{ project_name }}/handlers"
 )
 
 const STATIC_FILES_PATH string = "static"
