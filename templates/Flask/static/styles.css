@@ -1,0 +1,19 @@
+.main-container {
+    margin: auto;
+    width: 50%;
+    border: 3px solid black;
+    border-radius: 5px;
+    padding: 10px;
+}
+.main-header {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+    font-family: Georgia;
+}
+.main-img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
