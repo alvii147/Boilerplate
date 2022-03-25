@@ -67,6 +67,8 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'accounts.User'
+
 WSGI_APPLICATION = '{{ project_name }}.wsgi.application'
 
 
