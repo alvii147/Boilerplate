@@ -1,7 +1,5 @@
 # Boilerplate code generator
 
-**REPOSITORY UNDER CONSTRUCTION**
-
 `createboilerplate.sh` is a bash script for generating boilerplate code for projects based on specific libraries and frameworks. It's intended to help kickstart projects by laying out the empty templates and take over the repetitive task of setting initial configurations.
 
 ## Supported Libraries & Frameworks
