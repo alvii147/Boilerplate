@@ -85,7 +85,9 @@ To start using the application, set the appropriate environment variables.
 
 ```bash
 # development/production environment
-export MYPROJECT_DJANGO_ENV="development"
+export MYPROJECT_DJANGO_ENV="<environment>"
+# secret key
+export MYPROJECT_DJANGO_SECRET_KEY="<secret key>"
 # postgres settings
 export MYPROJECT_POSTGRES_DB="<postgresql database name>"
 export MYPROJECT_POSTGRES_USER="<postgresql username>"
@@ -93,8 +95,8 @@ export MYPROJECT_POSTGRES_PASSWORD="<postgres password>"
 export MYPROJECT_POSTGRES_HOST="<postgres host name>"
 export MYPROJECT_POSTGRES_PORT="<postgres port number>"
 # email backend settings (only for production)
-export MYPROJECT_EMAIL_HOST_USER="<postgres host name>"
-export MYPROJECT_EMAIL_HOST_PASSWORD="<postgres port number>"
+export MYPROJECT_EMAIL_HOST_USER="<host email address>"
+export MYPROJECT_EMAIL_HOST_PASSWORD="<host email password>"
 ```
 
 Once environment variables are set, Django server is ready to be run.
@@ -160,7 +162,7 @@ MyProject/
 Set up environment variables.
 
 ```bash
-export FLASK_APP_SECRET_KEY="thequickbrownfoxjumpedoverthelazydog" 
+export FLASK_APP_SECRET_KEY="<secret key>" 
 ```
 
 Executing `MyProject.py` runs the basic Flask application on `https://localhost:5000`.
